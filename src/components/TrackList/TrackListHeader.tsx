@@ -119,16 +119,17 @@ export function TrackListHeader() {
           </DialogContent>
         </Dialog>
 
-        {queue.length > 0 && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
-                title="Clear playlist"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </DialogTrigger>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+              title="Clear playlist"
+              disabled={queue.length === 0}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </DialogTrigger>
+          {queue.length > 0 && (
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Clear Playlist</DialogTitle>
@@ -147,8 +148,8 @@ export function TrackListHeader() {
                 </DialogClose>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
-        )}
+          )}
+        </Dialog>
         <Popover>
           <PopoverTrigger asChild>
             <button
