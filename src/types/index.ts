@@ -33,11 +33,8 @@ export type TrackColumn = "artist" | "title" | "album" | "filename" | "duration"
 
 /** Playlist from Rust backend */
 export interface PlaylistData {
-  id: string;
   name: string;
   tracks: Track[];
-  created_at: string;
-  updated_at: string;
 }
 
 /** Tree node for the file tree (used for UI display) */

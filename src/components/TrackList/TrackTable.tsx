@@ -6,7 +6,7 @@ import { cn } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
   title: "minmax(180px, 1fr)",
@@ -140,7 +140,7 @@ export function TrackTable() {
       <div className="flex-1 overflow-y-auto">
         {tracks.length === 0 ? (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-            {activePlaylist.id !== QUEUE_PLAYLIST.id ? "Playlist is empty" : "No tracks loaded"}
+            {activePlaylist.name !== QUEUE_PLAYLIST_NAME ? "Playlist is empty" : "No tracks loaded"}
           </div>
         ) : (
           tracks.map((track, index) => (

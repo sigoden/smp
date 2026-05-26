@@ -1,12 +1,6 @@
-import type { TrackColumn, PlaylistData } from "../types";
+import type { TrackColumn } from "../types";
 
-export const QUEUE_PLAYLIST: PlaylistData = {
-  id: "__queue__",
-  name: "QUEUE",
-  tracks: [],
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
+export const QUEUE_PLAYLIST_NAME = "QUEUE";
 
 export const ALL_TRACK_COLUMNS: TrackColumn[] = [
   "title",

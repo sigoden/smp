@@ -52,7 +52,7 @@ export function TrackContextMenu({
   onEditTags?: () => void;
   disabled?: boolean;
 }) {
-  const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const removeTracks = usePlaylistStore((s) => s.removeTracks);
 
   const handleOpenInExplorer = () => {
@@ -60,8 +60,8 @@ export function TrackContextMenu({
   };
 
   const handleDeleteFromPlaylist = () => {
-    if (activePlaylistId) {
-      removeTracks(activePlaylistId, [trackIndex]);
+    if (activePlaylistName) {
+      removeTracks(activePlaylistName, [trackIndex]);
     }
   };
 
@@ -86,7 +86,7 @@ export function TrackContextMenu({
           <ContextSeparator />
           <ContextMenuItem
             onClick={handleDeleteFromPlaylist}
-            disabled={!activePlaylistId}
+            disabled={!activePlaylistName}
             danger
           >
             <Trash2 className="mr-2 h-3.5 w-3.5" />

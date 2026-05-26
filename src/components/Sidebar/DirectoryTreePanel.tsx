@@ -16,7 +16,7 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import type { FsEntry, Track, TrackMetadata } from "../../types";
-import { QUEUE_PLAYLIST } from "../../lib/constants";
+import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
 function TreeNode({
   entry,
@@ -34,7 +34,7 @@ function TreeNode({
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
-  const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const addTracks = usePlaylistStore((s) => s.addTracks);
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
@@ -114,8 +114,8 @@ function TreeNode({
           duration: 0,
         };
         appendAndPlay([track]);
-        addTracks(activePlaylistId, [track]);
-        if (activePlaylistId === QUEUE_PLAYLIST.id) {
+        addTracks(activePlaylistName, [track]);
+        if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
           saveActivePlaylist()
         }
       }
@@ -144,8 +144,8 @@ function TreeNode({
     const tracks = await loadTracksFromDir(dirPath);
     if (tracks.length > 0) {
       appendAndPlay(tracks);
-      addTracks(activePlaylistId, tracks);
-      if (activePlaylistId === QUEUE_PLAYLIST.id) {
+      addTracks(activePlaylistName, tracks);
+      if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
         saveActivePlaylist()
       }
     }

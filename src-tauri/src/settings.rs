@@ -12,7 +12,7 @@ pub struct AppSettings {
     pub play_mode: String,
     pub visible_columns: Vec<String>,
     pub sidebar_tab: String,
-    pub active_playlist_id: Option<String>,
+    pub active_playlist_name: Option<String>,
     pub sidebar_width: u16,
     pub track_index: i32,
 }
@@ -32,7 +32,7 @@ impl Default for AppSettings {
                 "duration".to_string(),
             ],
             sidebar_tab: "tree".to_string(),
-            active_playlist_id: None,
+            active_playlist_name: None,
             sidebar_width: 256,
             track_index: -1,
         }

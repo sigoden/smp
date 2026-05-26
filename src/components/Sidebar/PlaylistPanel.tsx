@@ -10,11 +10,11 @@ import {
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { cn } from "../../lib/utils";
-import { QUEUE_PLAYLIST } from "../../lib/constants";
+import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
 export function PlaylistPanel() {
   const playlists = usePlaylistStore((s) => s.playlists);
-  const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const setActivePlaylist = usePlaylistStore((s) => s.setActivePlaylist);
   const createPlaylist = usePlaylistStore((s) => s.createPlaylist);
   const renamePlaylist = usePlaylistStore((s) => s.renamePlaylist);
@@ -24,7 +24,7 @@ export function PlaylistPanel() {
 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renamingName, setRenamingName] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
   const handleCreate = async () => {
@@ -35,26 +35,26 @@ export function PlaylistPanel() {
     setCreating(false);
   };
 
-  const handleRename = async (id: string) => {
+  const handleRename = async (oldName: string) => {
     const name = editName.trim();
     if (!name) return;
-    await renamePlaylist(id, name);
-    setRenamingId(null);
+    await renamePlaylist(oldName, name);
+    setRenamingName(null);
     setEditName("");
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await deletePlaylist(id);
+    await deletePlaylist(name);
   };
 
-  const handleDoubleClick = (playlistId: string) => {
-    const pl = playlists.find((p) => p.id === playlistId);
+  const handleDoubleClick = (playlistName: string) => {
+    const pl = playlists.find((p) => p.name === playlistName);
     if (pl && pl.tracks.length > 0) {
       loadQueue(pl.tracks);
       play();
     }
-    setActivePlaylist(playlistId);
+    setActivePlaylist(playlistName);
   };
 
   return (
@@ -114,20 +114,20 @@ export function PlaylistPanel() {
             No playlists yet
           </p>
         ) : (
-          playlists.filter(pl => pl.id !== QUEUE_PLAYLIST.id).map((pl) => {
-            const isActive = pl.id === activePlaylistId;
-            const isRenaming = pl.id === renamingId;
+          playlists.filter(pl => pl.name !== QUEUE_PLAYLIST_NAME).map((pl) => {
+            const isActive = pl.name === activePlaylistName;
+            const isRenaming = pl.name === renamingName;
 
             return (
               <div
-                key={pl.id}
+                key={pl.name}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 cursor-pointer rounded-none text-sm group hover:bg-accent/50",
                   isActive && "bg-accent text-accent-foreground"
                 )}
-                onDoubleClick={() => handleDoubleClick(pl.id)}
+                onDoubleClick={() => handleDoubleClick(pl.name)}
                 onClick={() => {
-                  setActivePlaylist(pl.id);
+                  setActivePlaylist(pl.name);
                   if (pl.tracks.length > 0) {
                     loadQueue(pl.tracks);
                     play();
@@ -142,9 +142,9 @@ export function PlaylistPanel() {
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRename(pl.id);
+                      if (e.key === "Enter") handleRename(pl.name);
                       if (e.key === "Escape") {
-                        setRenamingId(null);
+                        setRenamingName(null);
                         setEditName("");
                       }
                     }}
@@ -167,7 +167,7 @@ export function PlaylistPanel() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRename(pl.id);
+                          handleRename(pl.name);
                         }}
                         className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
                       >
@@ -176,7 +176,7 @@ export function PlaylistPanel() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setRenamingId(null);
+                          setRenamingName(null);
                           setEditName("");
                         }}
                         className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
@@ -189,7 +189,7 @@ export function PlaylistPanel() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setRenamingId(pl.id);
+                          setRenamingName(pl.name);
                           setEditName(pl.name);
                         }}
                         className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
@@ -198,7 +198,7 @@ export function PlaylistPanel() {
                         <Pencil className="h-3 w-3" />
                       </button>
                       <button
-                        onClick={(e) => handleDelete(pl.id, e)}
+                        onClick={(e) => handleDelete(pl.name, e)}
                         className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
                         title="Delete"
                       >

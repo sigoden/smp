@@ -49,14 +49,17 @@ pub fn get_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
 
 #[command]
 pub fn sync_playlist(app: AppHandle, playlist: Playlist) -> Result<(), String> {
-    let mut playlist = playlist;
-    playlist.updated_at = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
     save_playlist(&app, &playlist)
 }
 
 #[command]
-pub fn remove_playlist(app: AppHandle, id: String) -> Result<(), String> {
-    delete_playlist(&app, &id)
+pub fn remove_playlist(app: AppHandle, name: String) -> Result<(), String> {
+    delete_playlist(&app, &name)
+}
+
+#[command]
+pub fn rename_playlist(app: AppHandle, old_name: String, new_name: String) -> Result<(), String> {
+    crate::playlist::rename_playlist(&app, &old_name, &new_name)
 }
 
 #[command]

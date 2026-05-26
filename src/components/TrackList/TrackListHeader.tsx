@@ -20,7 +20,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import type { TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 export function TrackListHeader() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -40,6 +40,11 @@ export function TrackListHeader() {
   const activePlaylist = getActivePlaylist();
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
+  
+  const handleSaveAsNewPlaylist = () => {
+    setSaveDialogOpen(false);
+    saveQueueAsNewPlaylist(newPlaylistName.trim(), queue);
+  };
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-border">
@@ -51,7 +56,7 @@ export function TrackListHeader() {
       </h2>
       <div className="flex items-center gap-1">
         {/* Save button */}
-        {activePlaylist.id !== QUEUE_PLAYLIST.id ? (
+        {activePlaylist.name !== QUEUE_PLAYLIST_NAME ? (
           <button
             className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
             title={isDirty ? "Save playlist changes" : "No changes to save"}
@@ -95,8 +100,7 @@ export function TrackListHeader() {
                     e.key === "Enter" &&
                     newPlaylistName.trim().length > 0
                   ) {
-                    saveQueueAsNewPlaylist(newPlaylistName.trim(), queue);
-                    setSaveDialogOpen(false);
+                    handleSaveAsNewPlaylist();
                   }
                 }}
               />
@@ -107,10 +111,7 @@ export function TrackListHeader() {
               </DialogClose>
               <Button
                 disabled={newPlaylistName.trim().length === 0}
-                onClick={() => {
-                  saveQueueAsNewPlaylist(newPlaylistName.trim(), queue);
-                  setSaveDialogOpen(false);
-                }}
+                onClick={handleSaveAsNewPlaylist}
               >
                 Save
               </Button>

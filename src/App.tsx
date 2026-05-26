@@ -46,7 +46,7 @@ function App() {
       play_mode: player.playMode,
       visible_columns: ui.visibleColumns,
       sidebar_tab: ui.sidebarTab,
-      active_playlist_id: playlist.activePlaylistId,
+      active_playlist_name: playlist.activePlaylistName,
       track_index: player.currentIndex,
     });
   };
@@ -107,7 +107,7 @@ function App() {
       // Load playlists from disk
       await playlistsStore.loadPlaylists();
 
-      playlistsStore.setActivePlaylist(settings.active_playlist_id);
+      playlistsStore.setActivePlaylist(settings.active_playlist_name);
 
       const activePlaylist = playlistsStore.getActivePlaylist();
       playerStore.loadQueue(activePlaylist.tracks, settings.track_index >= 0 ? settings.track_index : undefined);
