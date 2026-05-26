@@ -6,7 +6,6 @@ import { TrackListHeader } from "./components/TrackList/TrackListHeader";
 import { TrackTable } from "./components/TrackList/TrackTable";
 import { PlayerBar } from "./components/Player/PlayerBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
-import { ScrollArea } from "./components/ui/scroll-area";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { useUIStore } from "./stores/uiStore";
 import { usePlayerStore } from "./stores/playerStore";
@@ -158,14 +157,14 @@ function App() {
               onValueChange={(v) => setTab(v as "tree" | "playlist")}
               className="flex flex-col h-full"
             >
-              <ScrollArea className="flex-1 px-2 py-2">
+              <div className="flex-1 px-2 py-2 overflow-hidden">
                 <TabsContent value="tree" className="mt-0 data-[state=active]:flex flex-col h-full">
                   <DirectoryTreePanel />
                 </TabsContent>
                 <TabsContent value="playlist" className="mt-0 data-[state=active]:flex flex-col h-full">
                   <PlaylistPanel />
                 </TabsContent>
-              </ScrollArea>
+              </div>
 
               {/* Sidebar tab buttons at bottom */}
               <TabsList className="grid grid-cols-2 mx-2 mb-2 mt-auto flex-shrink-0">
