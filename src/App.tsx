@@ -139,7 +139,7 @@ function App() {
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
   useEffect(() => {
     if (nowPlaying) {
-      const text = `${nowPlaying.title || ""} - ${nowPlaying.artist || ""}`;
+      const text = `${nowPlaying.title ?? ""} - ${nowPlaying.artist ?? ""}`;
       emit("update-tray-tooltip", text);
     } else {
       emit("update-tray-tooltip", "Music Player");

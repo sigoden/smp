@@ -6,21 +6,14 @@ import { cn } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
-
-const columnLabels: Record<TrackColumn, string> = {
-  title: "Title",
-  artist: "Artist",
-  album: "Album",
-  duration: "Duration",
-  filename: "Filename",
-};
+import { TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
   title: "minmax(180px, 1fr)",
   artist: "minmax(140px, 1fr)",
   album: "minmax(140px, 1fr)",
-  duration: "minmax(60px, 80px)",
   filename: "minmax(180px, 1.5fr)",
+  duration: "minmax(60px, 80px)",
 };
 
 function formatDuration(seconds: number): string {
@@ -50,11 +43,11 @@ function TrackRow({
   };
 
   const cellValues: Record<TrackColumn, string> = {
-    title: track.title || track.path.split(/[/\\]/).pop()?.replace(/\.[^.]+$/, "") || "",
+    title: track.title,
     artist: track.artist,
     album: track.album,
-    duration: formatDuration(track.duration),
     filename: track.path.split(/[/\\]/).pop() || track.path,
+    duration: formatDuration(track.duration),
   };
 
   return (
@@ -130,7 +123,7 @@ export function TrackTable() {
               col === "duration" && "text-right"
             )}
           >
-            {columnLabels[col]}
+            {TRACK_COLUMN_LABELS[col]}
           </span>
         ))}
       </div>

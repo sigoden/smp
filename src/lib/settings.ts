@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { ALL_TRACK_COLUMNS } from "./constants";
 
 /** Mirrors the Rust AppSettings struct */
 export interface AppSettings {
@@ -23,7 +24,7 @@ export async function loadSettings(): Promise<AppSettings> {
       expanded_paths: [],
       volume: 0.8,
       play_mode: "sequential",
-      visible_columns: ["title", "artist", "album", "duration", "filename"],
+      visible_columns: ALL_TRACK_COLUMNS,
       sidebar_tab: "tree",
       active_playlist_id: null,
       sidebar_width: 256,

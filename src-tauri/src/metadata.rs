@@ -18,20 +18,13 @@ pub struct TrackMetadata {
 pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
     let path = Path::new(file_path);
 
-    // Try to get the filename as fallback title
-    let filename = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("??")
-        .to_string();
-
     let file = match read_from_path(path) {
         Ok(f) => f,
         Err(_) => {
             // Return minimal metadata if we can't parse
             return Ok(TrackMetadata {
                 path: file_path.to_string(),
-                title: Some(filename),
+                title: None,
                 artist: None,
                 album: None,
                 duration: 0.0,
@@ -56,7 +49,7 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
 
     Ok(TrackMetadata {
         path: file_path.to_string(),
-        title: title.or(Some(filename)),
+        title,
         artist,
         album,
         duration,

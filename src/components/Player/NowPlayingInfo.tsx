@@ -16,13 +16,7 @@ export function NowPlayingInfo() {
     );
   }
 
-  const title =
-    nowPlaying.title ||
-    nowPlaying.path
-      .split(/[/\\]/)
-      .pop()
-      ?.replace(/\.[^.]+$/, "") ||
-    "??";
+  const title = nowPlaying.title ?? "";
   const subtitle = [nowPlaying.artist, nowPlaying.album].filter(Boolean).join(" — ");
 
   return (
