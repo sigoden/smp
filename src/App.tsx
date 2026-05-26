@@ -7,6 +7,7 @@ import { TrackTable } from "./components/TrackList/TrackTable";
 import { PlayerBar } from "./components/Player/PlayerBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
 import { ScrollArea } from "./components/ui/scroll-area";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { useUIStore } from "./stores/uiStore";
 import { usePlayerStore } from "./stores/playerStore";
 import { usePlaylistStore } from "./stores/playlistStore";
@@ -144,51 +145,53 @@ function App() {
   }, [nowPlaying]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden select-none">
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-64 flex-shrink-0 border-r border-border bg-muted/20 flex flex-col">
-          <Tabs
-            value={sidebarTab}
-            onValueChange={(v) => setTab(v as "tree" | "playlist")}
-            className="flex flex-col h-full"
-          >
-            <ScrollArea className="flex-1 px-2 py-2">
-              <TabsContent value="tree" className="mt-0 data-[state=active]:flex flex-col h-full">
-                <DirectoryTreePanel />
-              </TabsContent>
-              <TabsContent value="playlist" className="mt-0 data-[state=active]:flex flex-col h-full">
-                <PlaylistPanel />
-              </TabsContent>
-            </ScrollArea>
+    <TooltipProvider>
+      <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden select-none">
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar */}
+          <aside className="w-64 flex-shrink-0 border-r border-border bg-muted/20 flex flex-col">
+            <Tabs
+              value={sidebarTab}
+              onValueChange={(v) => setTab(v as "tree" | "playlist")}
+              className="flex flex-col h-full"
+            >
+              <ScrollArea className="flex-1 px-2 py-2">
+                <TabsContent value="tree" className="mt-0 data-[state=active]:flex flex-col h-full">
+                  <DirectoryTreePanel />
+                </TabsContent>
+                <TabsContent value="playlist" className="mt-0 data-[state=active]:flex flex-col h-full">
+                  <PlaylistPanel />
+                </TabsContent>
+              </ScrollArea>
 
-            {/* Sidebar tab buttons at bottom */}
-            <TabsList className="grid grid-cols-2 mx-2 mb-2 mt-auto flex-shrink-0">
-              <TabsTrigger value="tree" className="text-xs">
-                Files
-              </TabsTrigger>
-              <TabsTrigger value="playlist" className="text-xs">
-                Playlists
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </aside>
+              {/* Sidebar tab buttons at bottom */}
+              <TabsList className="grid grid-cols-2 mx-2 mb-2 mt-auto flex-shrink-0">
+                <TabsTrigger value="tree" className="text-xs">
+                  Files
+                </TabsTrigger>
+                <TabsTrigger value="playlist" className="text-xs">
+                  Playlists
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </aside>
 
-        {/* Right panel */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {/* Track list header (column config + playlist name) */}
-          <TrackListHeader />
+          {/* Right panel */}
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {/* Track list header (column config + playlist name) */}
+            <TrackListHeader />
 
-          {/* Track table */}
-          <div className="flex-1 overflow-hidden">
-            <TrackTable />
-          </div>
-        </main>
+            {/* Track table */}
+            <div className="flex-1 overflow-hidden">
+              <TrackTable />
+            </div>
+          </main>
+        </div>
+
+        {/* Bottom player bar */}
+        <PlayerBar />
       </div>
-
-      {/* Bottom player bar */}
-      <PlayerBar />
-    </div>
+    </TooltipProvider>
   );
 }
 
