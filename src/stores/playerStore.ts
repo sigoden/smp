@@ -26,6 +26,7 @@ interface PlayerState {
   setPosition: (pos: number) => void;
   setDuration: (dur: number) => void;
   playTrack: (track: Track) => Promise<void>;
+  clearQueue: () => void;
 }
 
 function getNextIndex(
@@ -203,5 +204,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       playing: true,
     });
     audio.play();
+  },
+
+  clearQueue: () => {
+    audio.pause();
+    audio.stop();
+    set({
+      queue: [],
+      currentIndex: -1,
+      playing: false,
+      position: 0,
+      nowPlaying: null,
+    });
   },
 }));
