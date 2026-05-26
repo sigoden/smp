@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { DirectoryTreePanel } from "./components/Sidebar/DirectoryTreePanel";
 import { PlaylistPanel } from "./components/Sidebar/PlaylistPanel";
@@ -28,28 +28,49 @@ function App() {
   const playerPrev = usePlayerStore((s) => s.prev);
 
   // Debounce timer for auto-saving settings
+  // Throttle timer for auto-saving settings
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastRunRef = useRef<number>(0);
 
-  const scheduleSave = () => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      const player = usePlayerStore.getState();
-      const library = useLibraryStore.getState();
-      const ui = useUIStore.getState();
-      const playlist = usePlaylistStore.getState();
+  const performSave = () => {
+    const player = usePlayerStore.getState();
+    const library = useLibraryStore.getState();
+    const ui = useUIStore.getState();
+    const playlist = usePlaylistStore.getState();
 
-      saveSettings({
-        sidebar_width: ui.sidebarWidth,
-        root_dirs: library.rootDirs,
-        expanded_paths: Array.from(library.expandedPaths),
-        volume: player.volume,
-        play_mode: player.playMode,
-        visible_columns: ui.visibleColumns,
-        sidebar_tab: ui.sidebarTab,
-        active_playlist_id: playlist.activePlaylistId,
-      });
-    }, 500);
+    saveSettings({
+      sidebar_width: ui.sidebarWidth,
+      root_dirs: library.rootDirs,
+      expanded_paths: Array.from(library.expandedPaths),
+      volume: player.volume,
+      play_mode: player.playMode,
+      visible_columns: ui.visibleColumns,
+      sidebar_tab: ui.sidebarTab,
+      active_playlist_id: playlist.activePlaylistId,
+    });
   };
+
+  const scheduleSave = useCallback(() => {
+    const now = Date.now();
+    const elapsed = now - lastRunRef.current;
+    const delay = 500;
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    if (elapsed >= delay) {
+      // Execute immediately if enough time has passed
+      lastRunRef.current = now;
+      performSave();
+    } else {
+      // Schedule a trailing execution to ensure the latest state is saved
+      saveTimerRef.current = setTimeout(() => {
+        lastRunRef.current = Date.now();
+        performSave();
+      }, delay - elapsed);
+    }
+  }, []);
 
   // Load settings on mount
   useEffect(() => {
