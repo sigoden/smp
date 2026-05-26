@@ -43,7 +43,12 @@ export function TrackListHeader() {
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-border">
-      <h2 className="text-sm font-semibold text-foreground">{activePlaylist.name}</h2>
+      <h2 className="text-sm font-semibold text-foreground">
+        {activePlaylist.name}
+        <span className="text-xs text-muted-foreground ml-2 font-normal">
+          {queue.length} songs
+        </span>
+      </h2>
       <div className="flex items-center gap-1">
         {/* Save button */}
         {activePlaylist.id !== QUEUE_PLAYLIST.id ? (
