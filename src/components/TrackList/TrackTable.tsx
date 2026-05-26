@@ -6,7 +6,7 @@ import { cn } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
-import { TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
   title: "minmax(180px, 1fr)",
@@ -87,6 +87,8 @@ function TrackRow({
 
 export function TrackTable() {
   const visibleColumns = useUIStore((s) => s.visibleColumns);
+  // Always render columns in the fixed order defined by ALL_TRACK_COLUMNS
+  const orderedColumns = ALL_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
@@ -110,12 +112,12 @@ export function TrackTable() {
       <div
         className="grid items-center px-4 py-1.5 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30"
         style={{
-          gridTemplateColumns: visibleColumns
+          gridTemplateColumns: orderedColumns
             .map((c) => columnWidths[c])
             .join(" "),
         }}
       >
-        {visibleColumns.map((col) => (
+        {orderedColumns.map((col) => (
           <span
             key={col}
             className={cn(
@@ -143,7 +145,7 @@ export function TrackTable() {
               isPlaying={
                 track.path === nowPlaying?.path && currentIndex === index
               }
-              columns={visibleColumns}
+              columns={orderedColumns}
               onEditTags={handleEditTags}
             />
           ))
