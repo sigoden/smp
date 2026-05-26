@@ -1,13 +1,6 @@
 import { usePlayerStore } from "../../stores/playerStore";
 import { Slider } from "../ui/slider";
 
-function formatTime(seconds: number): string {
-  if (!seconds || seconds < 0) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 export function ProgressBar() {
   const position = usePlayerStore((s) => s.position);
   const duration = usePlayerStore((s) => s.duration);
@@ -22,10 +15,7 @@ export function ProgressBar() {
   };
 
   return (
-    <div className="flex items-center gap-2 flex-1 max-w-xl">
-      <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
-        {formatTime(position)}
-      </span>
+    <div className="w-full">
       <Slider
         value={[Math.min(position, max)]}
         onValueChange={handleSeek}
@@ -33,11 +23,7 @@ export function ProgressBar() {
         max={max}
         step={0.5}
         disabled={!hasTracks}
-        className="flex-1"
       />
-      <span className="text-xs text-muted-foreground tabular-nums w-10">
-        {formatTime(duration)}
-      </span>
     </div>
   );
 }

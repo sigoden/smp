@@ -1,4 +1,3 @@
-import { Disc3 } from "lucide-react";
 import { usePlayerStore } from "../../stores/playerStore";
 import {
   Tooltip,
@@ -11,13 +10,8 @@ export function NowPlayingInfo() {
 
   if (!nowPlaying) {
     return (
-      <div className="flex items-center gap-3 min-w-0 w-56">
-        <div className="shrink-0 w-10 h-10 rounded bg-muted flex items-center justify-center">
-          <Disc3 className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-muted-foreground truncate">No track playing</p>
-        </div>
+      <div className="min-w-0 w-full max-w-xl">
+        <p className="text-sm text-muted-foreground truncate text-center">No track playing</p>
       </div>
     );
   }
@@ -32,30 +26,25 @@ export function NowPlayingInfo() {
   const subtitle = [nowPlaying.artist, nowPlaying.album].filter(Boolean).join(" — ");
 
   return (
-    <div className="flex items-center gap-3 min-w-0 w-56">
-      <div className="shrink-0 w-10 h-10 rounded bg-accent flex items-center justify-center">
-        <Disc3 className="h-5 w-5 text-accent-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
+    <div className="min-w-0 w-full">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <p className="text-sm font-medium truncate text-center cursor-default">
+            {title}
+          </p>
+        </TooltipTrigger>
+        <TooltipContent>{title}</TooltipContent>
+      </Tooltip>
+      {subtitle && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <p className="text-sm font-medium truncate cursor-default">
-              {title}
+            <p className="text-xs text-muted-foreground truncate text-center cursor-default">
+              {subtitle}
             </p>
           </TooltipTrigger>
-          <TooltipContent>{title}</TooltipContent>
+          <TooltipContent>{subtitle}</TooltipContent>
         </Tooltip>
-        {subtitle && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <p className="text-xs text-muted-foreground truncate cursor-default">
-                {subtitle}
-              </p>
-            </TooltipTrigger>
-            <TooltipContent>{subtitle}</TooltipContent>
-          </Tooltip>
-        )}
-      </div>
+      )}
     </div>
   );
 }
