@@ -13,7 +13,7 @@ interface PlayerState {
   nowPlaying: Track | null;
 
   // Actions
-  loadQueue: (tracks: Track[], startIndex?: number) => void;
+  loadQueue: (tracks: Track[]) => void;
   appendAndPlay: (tracks: Track[]) => void;
   play: () => void;
   pause: () => void;
@@ -73,9 +73,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playMode: "sequential",
   nowPlaying: null,
 
-  loadQueue: (tracks, startIndex = 0) => {
+  loadQueue: (tracks) => {
     audio.pause();
     audio.stop();
+    const { playMode } = get();
+    const startIndex = playMode === "shuffle"
+      ? Math.floor(Math.random() * tracks.length)
+      : 0;
 
     set({
       queue: tracks,
@@ -93,24 +97,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   appendAndPlay: (tracks: Track[]) => {
     if (tracks.length === 0) return;
-    const { queue } = get();
+    let targetTrack = tracks[0];
+    const { queue, playMode } = get();
     const existingPaths = new Set(queue.map((t) => t.path));
     const newTracks = tracks.filter((t) => !existingPaths.has(t.path));
 
     if (newTracks.length === 0) return;
 
     const newQueue = [...queue, ...newTracks];
-    const track = tracks[0];
-    const targetIndex = newQueue.findIndex((t) => t.path === track.path);
+    if (playMode === "shuffle") {
+      targetTrack = newQueue[Math.floor(Math.random() * newQueue.length)];
+    }
+    const targetIndex = newQueue.findIndex((t) => t.path === targetTrack.path);
 
-    if (!track) return;
-    audio.loadTrack(track.path);
+    if (!targetTrack) return;
+    audio.loadTrack(targetTrack.path);
     set({
       queue: newQueue,
       currentIndex: targetIndex,
-      nowPlaying: track,
+      nowPlaying: targetTrack,
       position: 0,
-      duration: 0,
+      duration: targetTrack.duration,
       playing: true,
     });
     audio.play();
@@ -142,7 +149,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentIndex: nextIdx,
       nowPlaying: track,
       position: 0,
-      duration: 0,
+      duration: track.duration,
       playing: true,
     });
     audio.play();
@@ -167,7 +174,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentIndex: prevIdx,
       nowPlaying: track,
       position: 0,
-      duration: 0,
+      duration: track.duration,
       playing: true,
     });
     audio.play();

@@ -49,7 +49,7 @@ export function PlaylistPanel() {
   const handleDoubleClick = (playlistId: string) => {
     const pl = playlists.find((p) => p.id === playlistId);
     if (pl && pl.tracks.length > 0) {
-      loadQueue(pl.tracks, 0);
+      loadQueue(pl.tracks);
     }
     setActivePlaylist(playlistId);
   };
