@@ -48,24 +48,10 @@ pub fn get_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
 }
 
 #[command]
-pub fn create_playlist(app: AppHandle, name: String) -> Result<Playlist, String> {
-    let now = chrono::Utc::now().to_rfc3339();
-    let playlist = Playlist {
-        id: uuid::Uuid::new_v4().to_string(),
-        name,
-        tracks: Vec::new(),
-        created_at: now.clone(),
-        updated_at: now,
-    };
-    save_playlist(&app, &playlist)?;
-    Ok(playlist)
-}
-
-#[command]
-pub fn update_playlist(app: AppHandle, playlist: Playlist) -> Result<(), String> {
-    let mut updated = playlist;
-    updated.updated_at = chrono::Utc::now().to_rfc3339();
-    save_playlist(&app, &updated)
+pub fn sync_playlist(app: AppHandle, playlist: Playlist) -> Result<(), String> {
+    let mut playlist = playlist;
+    playlist.updated_at = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+    save_playlist(&app, &playlist)
 }
 
 #[command]

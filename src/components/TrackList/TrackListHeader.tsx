@@ -20,14 +20,13 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import type { TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 export function TrackListHeader() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
 
-  const playlists = usePlaylistStore((s) => s.playlists);
-  const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const getActivePlaylist = usePlaylistStore((s) => s.getActivePlaylist);
   const isDirty = usePlaylistStore((s) => s.isDirty);
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const saveQueueAsNewPlaylist = usePlaylistStore(
@@ -38,18 +37,16 @@ export function TrackListHeader() {
   const queue = usePlayerStore((s) => s.queue);
   const clearQueue = usePlayerStore((s) => s.clearQueue);
 
-  const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
-  const title = activePlaylist ? activePlaylist.name : "Queue";
-
+  const activePlaylist = getActivePlaylist();
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-border">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <h2 className="text-sm font-semibold text-foreground">{activePlaylist.name}</h2>
       <div className="flex items-center gap-1">
         {/* Save button */}
-        {activePlaylistId ? (
+        {activePlaylist.id !== QUEUE_PLAYLIST.id ? (
           <button
             className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
             title={isDirty ? "Save playlist changes" : "No changes to save"}

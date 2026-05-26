@@ -92,19 +92,25 @@ function App() {
         useLibraryStore.setState({ expandedPaths: new Set(settings.expanded_paths) });
       }
 
-      const player = usePlayerStore.getState();
-      player.setVolume(settings.volume);
-      player.setPlayMode(settings.play_mode as PlayMode);
+      const playerStore = usePlayerStore.getState();
+      playerStore.setVolume(settings.volume);
+      playerStore.setPlayMode(settings.play_mode as PlayMode);
 
       useUIStore.setState({
         sidebarTab: settings.sidebar_tab as SidebarTab,
         visibleColumns: settings.visible_columns as TrackColumn[],
       });
 
-      usePlaylistStore.setState({ activePlaylistId: settings.active_playlist_id });
+      const playlistsStore = await usePlaylistStore.getState();
 
       // Load playlists from disk
-      await usePlaylistStore.getState().loadPlaylists();
+      await playlistsStore.loadPlaylists();
+
+      playlistsStore.setActivePlaylist(settings.active_playlist_id);
+
+      const activePlaylist = playlistsStore.getActivePlaylist();
+      playerStore.loadQueue(activePlaylist.tracks, playerStore.currentIndex);
+
     };
 
     init();

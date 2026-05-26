@@ -110,7 +110,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (newTracks.length === 0) return;
 
     const newQueue = [...queue, ...newTracks];
-    if (playMode === "shuffle") {
+    if (playMode === "shuffle" && tracks.length > 1) {
       targetTrack = newQueue[Math.floor(Math.random() * newQueue.length)];
     }
     const targetIndex = newQueue.findIndex((t) => t.path === targetTrack.path);

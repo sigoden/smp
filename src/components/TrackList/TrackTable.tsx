@@ -6,7 +6,7 @@ import { cn } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
   title: "minmax(180px, 1fr)",
@@ -97,17 +97,15 @@ export function TrackTable() {
   const visibleColumns = useUIStore((s) => s.visibleColumns);
   // Always render columns in the fixed order defined by ALL_TRACK_COLUMNS
   const orderedColumns = ALL_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
-  const queue = usePlayerStore((s) => s.queue);
+  const tracks = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
-  const playlists = usePlaylistStore((s) => s.playlists);
-  const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const getActivePlaylist = usePlaylistStore((s) => s.getActivePlaylist);
 
   const [tagEditTrack, setTagEditTrack] = useState<Track | null>(null);
   const [tagEditOpen, setTagEditOpen] = useState(false);
 
-  const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
-  const tracks = activePlaylist ? activePlaylist.tracks : queue;
+  const activePlaylist = getActivePlaylist();
 
   const handleEditTags = (track: Track) => {
     setTagEditTrack(track);
@@ -142,7 +140,7 @@ export function TrackTable() {
       <div className="flex-1 overflow-y-auto">
         {tracks.length === 0 ? (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-            {activePlaylist ? "Playlist is empty" : "No tracks loaded"}
+            {activePlaylist.id !== QUEUE_PLAYLIST.id ? "Playlist is empty" : "No tracks loaded"}
           </div>
         ) : (
           tracks.map((track, index) => (

@@ -33,6 +33,8 @@ function TreeNode({
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
+  const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const addTracks = usePlaylistStore((s) => s.addTracks);
   const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
   const [loading, setLoading] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,9 +123,9 @@ function TreeNode({
     setDirDialog({ open: false, dirPath: "", dirName: "" });
     const tracks = await loadTracksFromDir(dirPath);
     if (tracks.length > 0) {
-      syncQueuePlaylist(tracks);
       loadQueue(tracks);
       play();
+      syncQueuePlaylist(tracks);
     }
     setDirLoading(false);
   };
@@ -136,6 +138,7 @@ function TreeNode({
     const tracks = await loadTracksFromDir(dirPath);
     if (tracks.length > 0) {
       appendAndPlay(tracks);
+      addTracks(activePlaylistId, tracks);
     }
     setDirLoading(false);
   };

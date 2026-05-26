@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import type { Track, PlaylistData } from "../types";
 import { invoke } from "@tauri-apps/api/core";
-import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
+import { v4 as uuidv4 } from "uuid";
+import { QUEUE_PLAYLIST } from "../lib/constants";
 
 interface PlaylistState {
   playlists: PlaylistData[];
-  activePlaylistId: string | null;
+  activePlaylistId: string;
   isDirty: boolean;
 
   // Actions
@@ -13,25 +14,27 @@ interface PlaylistState {
   createPlaylist: (name: string) => Promise<void>;
   renamePlaylist: (id: string, name: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
-  syncQueuePlaylist: (tracks: Track[]) => void;
   addTracks: (playlistId: string, tracks: Track[]) => void;
   removeTracks: (playlistId: string, trackIndices: number[]) => void;
   savePlaylist: (playlist: PlaylistData) => Promise<void>;
   saveQueueAsNewPlaylist: (name: string, tracks: Track[]) => Promise<void>;
   saveActivePlaylist: () => Promise<void>;
-  setActivePlaylist: (id: string | null) => void;
-  isQueuePlaylist: () => boolean;
+  syncQueuePlaylist: (tracks: Track[]) => Promise<void>;
+  setActivePlaylist: (id: string) => void;
+  getActivePlaylist: () => PlaylistData;
 }
 
 export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   playlists: [],
-  activePlaylistId: null,
+  activePlaylistId: QUEUE_PLAYLIST.id,
   isDirty: false,
 
   loadPlaylists: async () => {
     try {
-      const playlists: PlaylistData[] = await invoke("get_playlists");
-      // Filter out the special queue playlist (id "queue") — not user-visible
+      let playlists: PlaylistData[] = await invoke("get_playlists");
+      if (!playlists.find((p) => p.id === QUEUE_PLAYLIST.id)) {
+        playlists = [QUEUE_PLAYLIST, ...playlists];
+      }
       set({
         playlists,
         isDirty: false,
@@ -43,7 +46,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
   createPlaylist: async (name: string) => {
     try {
-      const playlist: PlaylistData = await invoke("create_playlist", { name });
+      const playlist: PlaylistData = await invoke("sync_playlist", { playlist: newPlaylist(name) });
       const { playlists } = get();
       set({ playlists: [...playlists, playlist], activePlaylistId: playlist.id });
     } catch (err) {
@@ -57,7 +60,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     if (!playlist) return;
 
     try {
-      await invoke("update_playlist", {
+      await invoke("sync_playlist", {
         playlist: { ...playlist, name },
       });
       set({
@@ -76,22 +79,10 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       const { playlists, activePlaylistId } = get();
       set({
         playlists: playlists.filter((p) => p.id !== id),
-        activePlaylistId: activePlaylistId === id ? null : activePlaylistId,
+        activePlaylistId: activePlaylistId === id ? QUEUE_PLAYLIST.id : activePlaylistId,
       });
     } catch (err) {
       console.error("Failed to delete playlist:", err);
-    }
-  },
-
-  syncQueuePlaylist: async (tracks: Track[]) => {
-    const { playlists, savePlaylist, saveQueueAsNewPlaylist } = get();
-    const playlist = playlists.find((p) => p.name === QUEUE_PLAYLIST_NAME);
-    if (playlist) {
-      playlist.tracks = tracks;
-      await savePlaylist(playlist);
-      set({ activePlaylistId: playlist.id, isDirty: false });
-    } else {
-      await saveQueueAsNewPlaylist(QUEUE_PLAYLIST_NAME, tracks);
     }
   },
 
@@ -104,7 +95,6 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       ...playlist,
       tracks: [...playlist.tracks, ...tracks],
     };
-
 
     set({
       playlists: playlists.map((p) =>
@@ -134,11 +124,15 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   },
 
   savePlaylist: async (playlist: PlaylistData) => {
-    const { activePlaylistId } = get();
+    const { activePlaylistId, playlists } = get();
     try {
-      await invoke("update_playlist", { playlist });
+      console.log("Saving playlist:", playlist.tracks.length, "tracks");
+      await invoke("sync_playlist", { playlist });
       if (activePlaylistId === playlist.id) {
         set({ isDirty: false });
+      }
+      if (!playlists.find((p) => p.id === playlist.id)) {
+        set({ playlists: [...playlists, playlist] });
       }
     } catch (err) {
       console.error("Failed to save playlist:", err);
@@ -146,19 +140,10 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   },
 
   saveQueueAsNewPlaylist: async (name: string, tracks: Track[]) => {
-    try {
-      const playlist: PlaylistData = await invoke("create_playlist", { name });
-      const updated: PlaylistData = { ...playlist, tracks };
-      await invoke("update_playlist", { playlist: updated });
-      const { playlists } = get();
-      set({
-        playlists: [...playlists, updated],
-        activePlaylistId: updated.id,
-        isDirty: false,
-      });
-    } catch (err) {
-      console.error("Failed to create playlist from queue:", err);
-    }
+    const { savePlaylist } = get();
+    const playlist = newPlaylist(name, tracks);
+    await savePlaylist(playlist);
+    set({ activePlaylistId: playlist.id });
   },
 
   saveActivePlaylist(): Promise<void> {
@@ -168,16 +153,39 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     return savePlaylist(playlist);
   },
 
-  setActivePlaylist: (id: string | null) => {
-    const { activePlaylistId } = get();
+  syncQueuePlaylist: async (tracks: Track[]) => {
+    const { savePlaylist, setActivePlaylist } = get();
+    const playlist: PlaylistData = {
+      ...QUEUE_PLAYLIST,
+      tracks,
+    };
+    await savePlaylist(playlist);
+    setActivePlaylist(playlist.id);
+  },
+
+  setActivePlaylist: (id: string) => {
+    const { activePlaylistId, playlists } = get();
     if (activePlaylistId === id) return; // No change
+    if (!playlists.find((p) => p.id === id)) {
+      console.warn(`Playlist with id ${id} not found`);
+      return;
+    }
     set({ activePlaylistId: id, isDirty: false });
   },
 
-  isQueuePlaylist: () => {
-    const { activePlaylistId, playlists } = get();
-    const playlist = playlists.find((p) => p.id === activePlaylistId);
-    return playlist?.name === QUEUE_PLAYLIST_NAME;
-  },
-
+  getActivePlaylist: () => {
+    const { playlists, activePlaylistId } = get();
+    return playlists.find((p) => p.id === activePlaylistId) || QUEUE_PLAYLIST;
+  }
 }));
+
+
+function newPlaylist(name: string, tracks: Track[] = []): PlaylistData {
+  return {
+    id: uuidv4(),
+    name,
+    tracks,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
