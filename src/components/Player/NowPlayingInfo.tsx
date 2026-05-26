@@ -16,7 +16,7 @@ export function NowPlayingInfo() {
     );
   }
 
-  const title = nowPlaying.title ?? "";
+  const title = nowPlaying.title ?? nowPlaying.path;
   const subtitle = [nowPlaying.artist, nowPlaying.album].filter(Boolean).join(" — ");
 
   return (

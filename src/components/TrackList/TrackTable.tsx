@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../../stores/uiStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
@@ -36,7 +36,14 @@ function TrackRow({
   columns: TrackColumn[];
   onEditTags?: (track: Track) => void;
 }) {
+  const rowRef = useRef<HTMLDivElement>(null);
   const playTrack = usePlayerStore((s) => s.playTrack);
+
+  useEffect(() => {
+    if (isPlaying && rowRef.current) {
+      rowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isPlaying]);
 
   const handleDoubleClick = () => {
     playTrack(track);
@@ -57,6 +64,7 @@ function TrackRow({
       onEditTags={onEditTags ? () => onEditTags(track) : undefined}
     >
       <div
+        ref={rowRef}
         className={cn(
           "grid items-center px-4 py-1.5 text-sm cursor-pointer border-b border-border/50 hover:bg-accent/30 transition-colors",
           isPlaying && "bg-accent/40 text-accent-foreground hover:bg-accent/50"
