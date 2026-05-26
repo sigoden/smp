@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { DirectoryTreePanel } from "./components/Sidebar/DirectoryTreePanel";
 import { PlaylistPanel } from "./components/Sidebar/PlaylistPanel";
@@ -10,7 +10,10 @@ import { ScrollArea } from "./components/ui/scroll-area";
 import { useUIStore } from "./stores/uiStore";
 import { usePlayerStore } from "./stores/playerStore";
 import { usePlaylistStore } from "./stores/playlistStore";
+import { useLibraryStore } from "./stores/libraryStore";
 import { setCallbacks } from "./lib/audio";
+import { loadSettings, saveSettings } from "./lib/settings";
+import type { TrackColumn } from "./types";
 
 function App() {
   const sidebarTab = useUIStore((s) => s.sidebarTab);
@@ -23,11 +26,59 @@ function App() {
   const playerStop = usePlayerStore((s) => s.stop);
   const playerNext = usePlayerStore((s) => s.next);
   const playerPrev = usePlayerStore((s) => s.prev);
-  const loadPlaylists = usePlaylistStore((s) => s.loadPlaylists);
 
-  // Load playlists on mount
+  // Debounce timer for auto-saving settings
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleSave = () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const player = usePlayerStore.getState();
+      const library = useLibraryStore.getState();
+      const ui = useUIStore.getState();
+      const playlist = usePlaylistStore.getState();
+
+      saveSettings({
+        root_dirs: library.rootDirs,
+        expanded_paths: Array.from(library.expandedPaths),
+        volume: player.volume,
+        play_mode: player.playMode,
+        visible_columns: ui.visibleColumns,
+        sidebar_tab: ui.sidebarTab,
+        active_playlist_id: playlist.activePlaylistId,
+      });
+    }, 500);
+  };
+
+  // Load settings on mount
   useEffect(() => {
-    loadPlaylists();
+    const init = async () => {
+      const settings = await loadSettings();
+
+      // Apply loaded settings to stores via setState to trigger proper reactivity
+      if (settings.root_dirs.length > 0) {
+        useLibraryStore.setState({ rootDirs: settings.root_dirs });
+        // Refresh tree data for root dirs
+        useLibraryStore.getState().refreshAll();
+      }
+
+      if (settings.expanded_paths.length > 0) {
+        useLibraryStore.setState({ expandedPaths: new Set(settings.expanded_paths) });
+      }
+
+      const player = usePlayerStore.getState();
+      player.setVolume(settings.volume);
+      player.setPlayMode(settings.play_mode as "sequential" | "repeat-one" | "shuffle");
+
+      useUIStore.setState({
+        sidebarTab: settings.sidebar_tab as "tree" | "playlist",
+        visibleColumns: settings.visible_columns as TrackColumn[],
+      });
+
+      usePlaylistStore.setState({ activePlaylistId: settings.active_playlist_id });
+    };
+
+    init();
 
     // Set up audio callbacks
     setCallbacks({
@@ -66,8 +117,18 @@ function App() {
       }
     });
 
+    // Subscribe to store changes for auto-save
+    const unsubPlayer = usePlayerStore.subscribe(() => scheduleSave());
+    const unsubLibrary = useLibraryStore.subscribe(() => scheduleSave());
+    const unsubUI = useUIStore.subscribe(() => scheduleSave());
+    const unsubPlaylist = usePlaylistStore.subscribe(() => scheduleSave());
+
     return () => {
       unlistenPlayPause.then((fn) => fn());
+      unsubPlayer();
+      unsubLibrary();
+      unsubUI();
+      unsubPlaylist();
     };
   }, []);
 

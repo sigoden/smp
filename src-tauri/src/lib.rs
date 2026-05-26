@@ -2,6 +2,7 @@ mod commands;
 mod metadata;
 mod playlist;
 mod scanner;
+mod settings;
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -102,6 +103,8 @@ pub fn run() {
             commands::remove_playlist,
             commands::open_in_explorer,
             commands::write_tags,
+            commands::load_app_settings,
+            commands::save_app_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

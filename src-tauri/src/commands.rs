@@ -1,6 +1,7 @@
 use crate::metadata::{read_metadata, TrackMetadata};
 use crate::playlist::{delete_playlist, load_playlists, save_playlist, Playlist};
 use crate::scanner::{collect_audio_files, scan_directory, FsEntry};
+use crate::settings::{load_settings, save_settings, AppSettings};
 use tauri::AppHandle;
 use tauri::command;
 
@@ -70,6 +71,16 @@ pub fn update_playlist(app: AppHandle, playlist: Playlist) -> Result<(), String>
 #[command]
 pub fn remove_playlist(app: AppHandle, id: String) -> Result<(), String> {
     delete_playlist(&app, &id)
+}
+
+#[command]
+pub fn load_app_settings(app: AppHandle) -> AppSettings {
+    load_settings(&app)
+}
+
+#[command]
+pub fn save_app_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
+    save_settings(&app, &settings)
 }
 
 #[cfg(target_os = "windows")]
