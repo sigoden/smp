@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { SidebarTab, TrackColumn } from "../types";
+import { ALL_TRACK_COLUMNS } from "../lib/constants";
 
 interface UIState {
   sidebarTab: SidebarTab;
@@ -14,7 +15,7 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarTab: "tree",
-  visibleColumns: ["title", "artist", "album", "duration", "filename"],
+  visibleColumns: ALL_TRACK_COLUMNS,
   sidebarWidth: 256,
 
   setTab: (tab: SidebarTab) => set({ sidebarTab: tab }),

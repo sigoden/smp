@@ -7,14 +7,7 @@ import {
   PopoverTrigger,
 } from "../ui/popover";
 import type { TrackColumn } from "../../types";
-
-const columnLabels: Record<TrackColumn, string> = {
-  title: "Title",
-  artist: "Artist",
-  album: "Album",
-  duration: "Duration",
-  filename: "Filename",
-};
+import { ALL_TRACK_COLUMNS, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 export function TrackListHeader() {
   const playlists = usePlaylistStore((s) => s.playlists);
@@ -25,13 +18,7 @@ export function TrackListHeader() {
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
   const title = activePlaylist ? activePlaylist.name : "Library";
 
-  const allColumns: TrackColumn[] = [
-    "title",
-    "artist",
-    "album",
-    "duration",
-    "filename",
-  ];
+  const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-border">
@@ -61,7 +48,7 @@ export function TrackListHeader() {
                   onChange={() => toggleColumn(col)}
                   className="accent-primary"
                 />
-                {columnLabels[col]}
+                {TRACK_COLUMN_LABELS[col]}
               </label>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Speaker, Volume2 } from "lucide-react";
+import { VolumeX, Volume2 } from "lucide-react";
 import { usePlayerStore } from "../../stores/playerStore";
 import { Slider } from "../ui/slider";
 
@@ -29,7 +29,7 @@ export function VolumeSlider() {
         title={muted ? "Unmute" : "Mute"}
       >
         {muted ? (
-          <Speaker className="h-4 w-4" />
+          <VolumeX className="h-4 w-4" />
         ) : (
           <Volume2 className="h-4 w-4" />
         )}
