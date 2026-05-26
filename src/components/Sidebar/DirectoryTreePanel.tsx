@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 
-import { Folder, FolderOpen, Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
+import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { useLibraryStore } from "../../stores/libraryStore";
@@ -118,11 +118,6 @@ function TreeNode({
               ) : (
                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               )}
-              {isExpanded ? (
-                <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-              ) : (
-                <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
-              )}
             </>
           )
         ) : (
@@ -212,7 +207,7 @@ export function DirectoryTreePanel() {
       {/* Root dir manager */}
       <div className="px-2 py-1 border-b border-border">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium text-muted-foreground">Root Directories</span>
+          <span className="text-xs font-medium text-muted-foreground">Files</span>
           <div className="flex items-center gap-0.5">
             <button
               onClick={handleRefresh}
