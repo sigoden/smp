@@ -25,17 +25,15 @@ pub fn run() {
             }
 
             // Build tray menu
-            let play_pause = MenuItemBuilder::with_id("play_pause", "Play/Pause").build(app)?;
+            let play_pause = MenuItemBuilder::with_id("play_pause", "Play").build(app)?;
             let next = MenuItemBuilder::with_id("next", "Next").build(app)?;
             let prev = MenuItemBuilder::with_id("prev", "Previous").build(app)?;
-            let stop = MenuItemBuilder::with_id("stop", "Stop").build(app)?;
             let quit = PredefinedMenuItem::quit(app, Some("Quit"))?;
 
             let menu = MenuBuilder::new(app)
                 .item(&play_pause)
                 .item(&next)
                 .item(&prev)
-                .item(&stop)
                 .separator()
                 .item(&quit)
                 .build()?;
@@ -67,11 +65,6 @@ pub fn run() {
                                 let _ = window.emit("tray-action", "prev");
                             }
                         }
-                        "stop" => {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.emit("tray-action", "stop");
-                            }
-                        }
                         _ => {}
                     }
                 })
@@ -96,6 +89,14 @@ pub fn run() {
             app.listen("update-tray-tooltip", move |event| {
                 let payload = event.payload().trim_matches('"').to_string();
                 let _ = tray_handle.set_tooltip(Some(&payload));
+            });
+
+            // Listen for play state changes to update tray menu label
+            let play_pause_clone = play_pause.clone();
+            app.listen("update-tray-play-state", move |event| {
+                let playing = event.payload().trim_matches('"');
+                let label = if playing == "true" { "Pause" } else { "Play" };
+                let _ = play_pause_clone.set_text(label);
             });
             Ok(())
         })

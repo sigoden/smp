@@ -24,7 +24,6 @@ function App() {
   const next = usePlayerStore((s) => s.next);
   const playerPlay = usePlayerStore((s) => s.play);
   const playerPause = usePlayerStore((s) => s.pause);
-  const playerStop = usePlayerStore((s) => s.stop);
   const playerNext = usePlayerStore((s) => s.next);
   const playerPrev = usePlayerStore((s) => s.prev);
 
@@ -112,9 +111,7 @@ function App() {
         case "prev":
           playerPrev();
           break;
-        case "stop":
-          playerStop();
-          break;
+
       }
     });
 
@@ -143,6 +140,12 @@ function App() {
       emit("update-tray-tooltip", "Music Player");
     }
   }, [nowPlaying]);
+
+  // Update tray play/pause label when playing state changes
+  const playing = usePlayerStore((s) => s.playing);
+  useEffect(() => {
+    emit("update-tray-play-state", playing ? "true" : "false");
+  }, [playing]);
 
   return (
     <TooltipProvider>

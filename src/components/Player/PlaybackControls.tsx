@@ -1,4 +1,4 @@
-import { SkipBack, Play, Pause, SkipForward, Square } from "lucide-react";
+import { SkipBack, Play, Pause, SkipForward } from "lucide-react";
 import { usePlayerStore } from "../../stores/playerStore";
 import { cn } from "../../lib/utils";
 
@@ -50,7 +50,6 @@ export function PlaybackControls() {
   const queue = usePlayerStore((s) => s.queue);
   const play = usePlayerStore((s) => s.play);
   const pause = usePlayerStore((s) => s.pause);
-  const stop = usePlayerStore((s) => s.stop);
   const next = usePlayerStore((s) => s.next);
   const prev = usePlayerStore((s) => s.prev);
 
@@ -74,12 +73,6 @@ export function PlaybackControls() {
         icon={SkipForward}
         onClick={next}
         disabled={!hasTracks}
-      />
-      <ControlButton
-        icon={Square}
-        onClick={stop}
-        disabled={!hasTracks}
-        size="sm"
       />
     </div>
   );
