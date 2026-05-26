@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import type { FsEntry, Track, TrackMetadata } from "../../types";
+import { QUEUE_PLAYLIST } from "../../lib/constants";
 
 function TreeNode({
   entry,
@@ -35,6 +36,7 @@ function TreeNode({
   const refreshDir = useLibraryStore((s) => s.refreshDir);
   const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
   const addTracks = usePlaylistStore((s) => s.addTracks);
+  const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
   const [loading, setLoading] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,6 +114,10 @@ function TreeNode({
           duration: 0,
         };
         appendAndPlay([track]);
+        addTracks(activePlaylistId, [track]);
+        if (activePlaylistId === QUEUE_PLAYLIST.id) {
+          saveActivePlaylist()
+        }
       }
     }
   };
@@ -139,6 +145,9 @@ function TreeNode({
     if (tracks.length > 0) {
       appendAndPlay(tracks);
       addTracks(activePlaylistId, tracks);
+      if (activePlaylistId === QUEUE_PLAYLIST.id) {
+        saveActivePlaylist()
+      }
     }
     setDirLoading(false);
   };
