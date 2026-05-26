@@ -5,7 +5,16 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
+import { usePlaylistStore } from "../../stores/playlistStore";
 import { cn } from "../../lib/utils";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import type { FsEntry, Track, TrackMetadata } from "../../types";
 
 function TreeNode({
@@ -17,11 +26,14 @@ function TreeNode({
 }) {
   const expandedPaths = useLibraryStore((s) => s.expandedPaths);
   const toggleExpand = useLibraryStore((s) => s.toggleExpand);
+  const loadQueue = usePlayerStore((s) => s.loadQueue);
   const appendAndPlay = usePlayerStore((s) => s.appendAndPlay);
+  const play = usePlayerStore((s) => s.play);
   const playTrack = usePlayerStore((s) => s.playTrack);
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
+  const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
   const [loading, setLoading] = useState(false);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -29,22 +41,29 @@ function TreeNode({
   const isExpanded = isDir && expandedPaths.has(entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
 
-  /** Load all audio files from a directory and append to the queue */
-  const loadDirectory = async (dirPath: string) => {
+  const [dirDialog, setDirDialog] = useState<{ open: boolean; dirPath: string; dirName: string }>({
+    open: false,
+    dirPath: "",
+    dirName: "",
+  });
+  const [dirLoading, setDirLoading] = useState(false);
+
+  /** Load all audio files from a directory and return track list */
+  const loadTracksFromDir = async (dirPath: string): Promise<Track[]> => {
     try {
       const files: string[] = await invoke("get_audio_files", { path: dirPath });
-      if (files.length === 0) return;
+      if (files.length === 0) return [];
       const metadata: TrackMetadata[] = await invoke("get_metadata_batch", { paths: files });
-      const tracks: Track[] = metadata.map((m) => ({
+      return metadata.map((m) => ({
         path: m.path,
         title: m.title ?? "",
         artist: m.artist ?? "",
         album: m.album ?? "",
         duration: m.duration,
       }));
-      appendAndPlay(tracks);
     } catch (err) {
       console.error("Failed to load directory:", err);
+      return [];
     }
   };
 
@@ -75,8 +94,8 @@ function TreeNode({
       clickTimerRef.current = null;
     }
     if (isDir) {
-      // Append all audio files from this directory to the queue
-      loadDirectory(entry.path);
+      // Show dialog to choose new playlist or append
+      setDirDialog({ open: true, dirPath: entry.path, dirName: entry.name });
     } else {
       // If track is already in the queue, jump to it; otherwise append and play
       const existingIdx = queue.findIndex((t) => t.path === entry.path);
@@ -93,6 +112,32 @@ function TreeNode({
         appendAndPlay([track]);
       }
     }
+  };
+
+  const handleNewPlaylist = async () => {
+    const { dirPath } = dirDialog;
+    if (!dirPath) return;
+    setDirLoading(true);
+    setDirDialog({ open: false, dirPath: "", dirName: "" });
+    const tracks = await loadTracksFromDir(dirPath);
+    if (tracks.length > 0) {
+      syncQueuePlaylist(tracks);
+      loadQueue(tracks);
+      play();
+    }
+    setDirLoading(false);
+  };
+
+  const handleAppend = async () => {
+    const { dirPath } = dirDialog;
+    if (!dirPath) return;
+    setDirLoading(true);
+    setDirDialog({ open: false, dirPath: "", dirName: "" });
+    const tracks = await loadTracksFromDir(dirPath);
+    if (tracks.length > 0) {
+      appendAndPlay(tracks);
+    }
+    setDirLoading(false);
   };
 
   return (
@@ -141,6 +186,32 @@ function TreeNode({
           )}
         </div>
       )}
+      <Dialog open={dirDialog.open} onOpenChange={(o) => !o && setDirDialog({ open: false, dirPath: "", dirName: "" })}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle>Load Directory</DialogTitle>
+            <DialogDescription>
+              Choose how to add tracks from <strong>{dirDialog.dirName}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="default"
+              onClick={handleNewPlaylist}
+              disabled={dirLoading}
+            >
+              New Playlist
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleAppend}
+              disabled={dirLoading}
+            >
+              Append Queue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

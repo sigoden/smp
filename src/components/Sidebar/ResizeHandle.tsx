@@ -1,9 +1,5 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { useUIStore } from "../../stores/uiStore";
-import { usePlayerStore } from "../../stores/playerStore";
-import { useLibraryStore } from "../../stores/libraryStore";
-import { usePlaylistStore } from "../../stores/playlistStore";
-import { saveSettings } from "../../lib/settings";
 
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 600;
@@ -46,23 +42,6 @@ export function ResizeHandle() {
       // Read the final value from the CSS variable and sync to Zustand once
       const finalWidth = parseInt(root.style.getPropertyValue("--sidebar-width"), 10) || startWidthRef.current;
       useUIStore.getState().setSidebarWidth(finalWidth);
-
-      // Save settings once on mouse release
-      const player = usePlayerStore.getState();
-      const library = useLibraryStore.getState();
-      const ui = useUIStore.getState();
-      const playlist = usePlaylistStore.getState();
-
-      saveSettings({
-        sidebar_width: ui.sidebarWidth,
-        root_dirs: library.rootDirs,
-        expanded_paths: Array.from(library.expandedPaths),
-        volume: player.volume,
-        play_mode: player.playMode,
-        visible_columns: ui.visibleColumns,
-        sidebar_tab: ui.sidebarTab,
-        active_playlist_id: playlist.activePlaylistId,
-      });
     };
 
     document.addEventListener("mousemove", handleMouseMove);

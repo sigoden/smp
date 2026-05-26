@@ -28,8 +28,8 @@ export function TrackListHeader() {
 
   const playlists = usePlaylistStore((s) => s.playlists);
   const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
-  const dirtyPlaylistIds = usePlaylistStore((s) => s.dirtyPlaylistIds);
-  const savePlaylist = usePlaylistStore((s) => s.savePlaylist);
+  const isDirty = usePlaylistStore((s) => s.isDirty);
+  const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const saveQueueAsNewPlaylist = usePlaylistStore(
     (s) => s.saveQueueAsNewPlaylist
   );
@@ -41,9 +41,6 @@ export function TrackListHeader() {
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
   const title = activePlaylist ? activePlaylist.name : "Queue";
 
-  const isDirty = activePlaylistId
-    ? dirtyPlaylistIds.has(activePlaylistId)
-    : false;
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
 
@@ -57,7 +54,7 @@ export function TrackListHeader() {
             className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
             title={isDirty ? "Save playlist changes" : "No changes to save"}
             disabled={!isDirty}
-            onClick={() => savePlaylist(activePlaylistId)}
+            onClick={() => saveActivePlaylist()}
           >
             <Save className="h-4 w-4" />
           </button>

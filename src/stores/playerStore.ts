@@ -13,7 +13,7 @@ interface PlayerState {
   nowPlaying: Track | null;
 
   // Actions
-  loadQueue: (tracks: Track[]) => void;
+  loadQueue: (tracks: Track[], index?: number) => void;
   appendAndPlay: (tracks: Track[]) => void;
   play: () => void;
   pause: () => void;
@@ -73,25 +73,30 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playMode: "sequential",
   nowPlaying: null,
 
-  loadQueue: (tracks) => {
+  loadQueue: (tracks, startIndex) => {
     audio.pause();
     audio.stop();
     const { playMode } = get();
-    const startIndex = playMode === "shuffle"
-      ? Math.floor(Math.random() * tracks.length)
-      : 0;
+    let currentIndex = 0;
+    if (startIndex !== undefined) {
+      if (startIndex >= 0 && startIndex < tracks.length) {
+        currentIndex = startIndex;
+      }
+    } else if (playMode === "shuffle") {
+      currentIndex = Math.floor(Math.random() * tracks.length);
+    }
 
     set({
       queue: tracks,
-      currentIndex: startIndex,
+      currentIndex: currentIndex,
       position: 0,
       duration: 0,
       playing: false,
-      nowPlaying: tracks[startIndex] || null,
+      nowPlaying: tracks[currentIndex] || null,
     });
 
-    if (tracks[startIndex]) {
-      audio.loadTrack(tracks[startIndex].path);
+    if (tracks[currentIndex]) {
+      audio.loadTrack(tracks[currentIndex].path);
     }
   },
 

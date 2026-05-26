@@ -10,6 +10,7 @@ import {
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { cn } from "../../lib/utils";
+import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
 export function PlaylistPanel() {
   const playlists = usePlaylistStore((s) => s.playlists);
@@ -113,7 +114,7 @@ export function PlaylistPanel() {
             No playlists yet
           </p>
         ) : (
-          playlists.map((pl) => {
+          playlists.filter(pl => pl.name !== QUEUE_PLAYLIST_NAME).map((pl) => {
             const isActive = pl.id === activePlaylistId;
             const isRenaming = pl.id === renamingId;
 

@@ -14,7 +14,7 @@ import { usePlaylistStore } from "./stores/playlistStore";
 import { useLibraryStore } from "./stores/libraryStore";
 import { setCallbacks } from "./lib/audio";
 import { loadSettings, saveSettings } from "./lib/settings";
-import type { TrackColumn } from "./types";
+import type { PlayMode, SidebarTab, TrackColumn } from "./types";
 
 function App() {
   const sidebarTab = useUIStore((s) => s.sidebarTab);
@@ -73,10 +73,10 @@ function App() {
 
       const player = usePlayerStore.getState();
       player.setVolume(settings.volume);
-      player.setPlayMode(settings.play_mode as "sequential" | "repeat-one" | "shuffle");
+      player.setPlayMode(settings.play_mode as PlayMode);
 
       useUIStore.setState({
-        sidebarTab: settings.sidebar_tab as "tree" | "playlist",
+        sidebarTab: settings.sidebar_tab as SidebarTab,
         visibleColumns: settings.visible_columns as TrackColumn[],
       });
 
