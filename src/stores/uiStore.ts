@@ -4,17 +4,21 @@ import type { SidebarTab, TrackColumn } from "../types";
 interface UIState {
   sidebarTab: SidebarTab;
   visibleColumns: TrackColumn[];
+  sidebarWidth: number;
 
   // Actions
   setTab: (tab: SidebarTab) => void;
   toggleColumn: (column: TrackColumn) => void;
+  setSidebarWidth: (width: number) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarTab: "tree",
   visibleColumns: ["title", "artist", "album", "duration", "filename"],
+  sidebarWidth: 256,
 
   setTab: (tab: SidebarTab) => set({ sidebarTab: tab }),
+  setSidebarWidth: (width: number) => set({ sidebarWidth: width }),
 
   toggleColumn: (column: TrackColumn) =>
     set((state) => {

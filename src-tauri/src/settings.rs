@@ -13,6 +13,7 @@ pub struct AppSettings {
     pub visible_columns: Vec<String>,
     pub sidebar_tab: String,
     pub active_playlist_id: Option<String>,
+    pub sidebar_width: u16,
 }
 
 impl Default for AppSettings {
@@ -31,6 +32,7 @@ impl Default for AppSettings {
             ],
             sidebar_tab: "tree".to_string(),
             active_playlist_id: None,
+            sidebar_width: 256,
         }
     }
 }

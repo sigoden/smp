@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { DirectoryTreePanel } from "./components/Sidebar/DirectoryTreePanel";
 import { PlaylistPanel } from "./components/Sidebar/PlaylistPanel";
+import { ResizeHandle } from "./components/Sidebar/ResizeHandle";
 import { TrackListHeader } from "./components/TrackList/TrackListHeader";
 import { TrackTable } from "./components/TrackList/TrackTable";
 import { PlayerBar } from "./components/Player/PlayerBar";
@@ -38,6 +39,7 @@ function App() {
       const playlist = usePlaylistStore.getState();
 
       saveSettings({
+        sidebar_width: ui.sidebarWidth,
         root_dirs: library.rootDirs,
         expanded_paths: Array.from(library.expandedPaths),
         volume: player.volume,
@@ -53,6 +55,10 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const settings = await loadSettings();
+
+      // Apply sidebar width — sync both Zustand and the CSS variable
+      useUIStore.setState({ sidebarWidth: settings.sidebar_width });
+      document.documentElement.style.setProperty("--sidebar-width", `${settings.sidebar_width}px`);
 
       // Apply loaded settings to stores via setState to trigger proper reactivity
       if (settings.root_dirs.length > 0) {
@@ -151,7 +157,7 @@ function App() {
       <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden select-none">
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
-          <aside className="w-64 flex-shrink-0 border-r border-border bg-muted/20 flex flex-col">
+          <aside className="relative flex-shrink-0 border-r border-border bg-muted/20 flex flex-col" style={{ width: "var(--sidebar-width, 256px)" }}>
             <Tabs
               value={sidebarTab}
               onValueChange={(v) => setTab(v as "tree" | "playlist")}
@@ -176,6 +182,7 @@ function App() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+            <ResizeHandle />
           </aside>
 
           {/* Right panel */}

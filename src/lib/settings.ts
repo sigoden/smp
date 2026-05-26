@@ -9,6 +9,7 @@ export interface AppSettings {
   visible_columns: string[];
   sidebar_tab: string;
   active_playlist_id: string | null;
+  sidebar_width: number;
 }
 
 /** Load app settings from disk, returns defaults if no saved settings exist */
@@ -25,6 +26,7 @@ export async function loadSettings(): Promise<AppSettings> {
       visible_columns: ["title", "artist", "album", "duration", "filename"],
       sidebar_tab: "tree",
       active_playlist_id: null,
+      sidebar_width: 256,
     };
   }
 }
