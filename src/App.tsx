@@ -47,6 +47,7 @@ function App() {
       visible_columns: ui.visibleColumns,
       sidebar_tab: ui.sidebarTab,
       active_playlist_id: playlist.activePlaylistId,
+      track_index: player.currentIndex,
     });
   };
 
@@ -109,7 +110,7 @@ function App() {
       playlistsStore.setActivePlaylist(settings.active_playlist_id);
 
       const activePlaylist = playlistsStore.getActivePlaylist();
-      playerStore.loadQueue(activePlaylist.tracks, playerStore.currentIndex);
+      playerStore.loadQueue(activePlaylist.tracks, settings.track_index >= 0 ? settings.track_index : undefined);
 
     };
 

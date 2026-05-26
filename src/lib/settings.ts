@@ -11,6 +11,7 @@ export interface AppSettings {
   sidebar_tab: string;
   active_playlist_id: string;
   sidebar_width: number;
+  track_index: number;
 }
 
 /** Load app settings from disk, returns defaults if no saved settings exist */
@@ -28,6 +29,7 @@ export async function loadSettings(): Promise<AppSettings> {
       sidebar_tab: "tree",
       active_playlist_id: QUEUE_PLAYLIST.id,
       sidebar_width: 256,
+      track_index: -1,
     };
   }
 }
