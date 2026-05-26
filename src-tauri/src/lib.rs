@@ -4,6 +4,7 @@ mod playlist;
 mod scanner;
 mod settings;
 use tauri::{
+    image::Image,
     menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Listener, Manager,
@@ -40,7 +41,13 @@ pub fn run() {
                 .build()?;
 
             // Build tray icon
+            let img = image::load_from_memory(include_bytes!("../icons/32x32.png"))
+                .expect("failed to load tray icon PNG")
+                .into_rgba8();
+            let (width, height) = img.dimensions();
+            let tray_icon = Image::new_owned(img.into_raw(), width, height);
             let tray = TrayIconBuilder::new()
+                .icon(tray_icon)
                 .menu(&menu)
                 .tooltip("Music Player")
                 .on_menu_event(|app, event| {
