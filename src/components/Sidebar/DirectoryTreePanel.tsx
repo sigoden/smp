@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { Folder, FolderOpen, Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { cn } from "../../lib/utils";
-import type { FsEntry } from "../../types";
+import type { FsEntry, Track, TrackMetadata } from "../../types";
 
 function TreeNode({
   entry,
@@ -16,38 +17,81 @@ function TreeNode({
 }) {
   const expandedPaths = useLibraryStore((s) => s.expandedPaths);
   const toggleExpand = useLibraryStore((s) => s.toggleExpand);
-  const loadQueue = usePlayerStore((s) => s.loadQueue);
+  const appendAndPlay = usePlayerStore((s) => s.appendAndPlay);
+  const playTrack = usePlayerStore((s) => s.playTrack);
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
   const [loading, setLoading] = useState(false);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isDir = entry.type === "dir";
   const isExpanded = isDir && expandedPaths.has(entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
 
-  const handleClick = async () => {
+  /** Load all audio files from a directory and append to the queue */
+  const loadDirectory = async (dirPath: string) => {
+    try {
+      const files: string[] = await invoke("get_audio_files", { path: dirPath });
+      if (files.length === 0) return;
+      const metadata: TrackMetadata[] = await invoke("get_metadata_batch", { paths: files });
+      const tracks: Track[] = metadata.map((m) => ({
+        path: m.path,
+        title: m.title || m.path.split(/[\\/]/).pop()?.replace(/\.[^.]+$/, "") || "Unknown",
+        artist: m.artist || "",
+        album: m.album || "",
+        duration: m.duration,
+      }));
+      appendAndPlay(tracks);
+    } catch (err) {
+      console.error("Failed to load directory:", err);
+    }
+  };
+
+  const handleClick = () => {
     if (isDir) {
-      if (!isExpanded) {
-        setLoading(true);
-        await refreshDir(entry.path);
-        setLoading(false);
+      // Cancel if this click is part of a double-click
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+        clickTimerRef.current = null;
+        return;
       }
-      toggleExpand(entry.path);
+      // Small delay to distinguish single vs double click
+      clickTimerRef.current = setTimeout(async () => {
+        clickTimerRef.current = null;
+        if (!isExpanded) {
+          setLoading(true);
+          await refreshDir(entry.path);
+          setLoading(false);
+        }
+        toggleExpand(entry.path);
+      }, 200);
     }
   };
 
   const handleDoubleClick = () => {
-    if (!isDir) {
-      // Load single track into queue
-      const track = {
-        path: entry.path,
-        title: entry.name.replace(/\.[^.]+$/, ""),
-        artist: "",
-        album: "",
-        duration: 0,
-      };
-      loadQueue([track], 0);
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+    if (isDir) {
+      // Append all audio files from this directory to the queue
+      loadDirectory(entry.path);
+    } else {
+      // If track is already in the queue, jump to it; otherwise append and play
+      const existingIdx = queue.findIndex((t) => t.path === entry.path);
+      if (existingIdx >= 0) {
+        playTrack(queue[existingIdx]);
+      } else {
+        const track: Track = {
+          path: entry.path,
+          title: entry.name.replace(/\.[^.]+$/, ""),
+          artist: "",
+          album: "",
+          duration: 0,
+        };
+        appendAndPlay([track]);
+      }
     }
   };
 

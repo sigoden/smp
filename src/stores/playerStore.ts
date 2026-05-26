@@ -14,6 +14,7 @@ interface PlayerState {
 
   // Actions
   loadQueue: (tracks: Track[], startIndex?: number) => void;
+  appendAndPlay: (tracks: Track[]) => void;
   play: () => void;
   pause: () => void;
   stop: () => void;
@@ -72,8 +73,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   nowPlaying: null,
 
   loadQueue: (tracks, startIndex = 0) => {
-    // Pause current playback
-    // Pause current playback
     audio.pause();
     audio.stop();
 
@@ -89,6 +88,31 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (tracks[startIndex]) {
       audio.loadTrack(tracks[startIndex].path);
     }
+  },
+
+  appendAndPlay: (tracks: Track[]) => {
+    if (tracks.length === 0) return;
+    const { queue } = get();
+    const existingPaths = new Set(queue.map((t) => t.path));
+    const newTracks = tracks.filter((t) => !existingPaths.has(t.path));
+
+    if (newTracks.length === 0) return;
+
+    const newQueue = [...queue, ...newTracks];
+    const track = tracks[0];
+    const targetIndex = newQueue.findIndex((t) => t.path === track.path);
+
+    if (!track) return;
+    audio.loadTrack(track.path);
+    set({
+      queue: newQueue,
+      currentIndex: targetIndex,
+      nowPlaying: track,
+      position: 0,
+      duration: 0,
+      playing: true,
+    });
+    audio.play();
   },
 
   play: () => {
