@@ -19,7 +19,7 @@ pub struct DirEntry {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(untagged)]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum FsEntry {
     File(FileEntry),
     Dir(DirEntry),

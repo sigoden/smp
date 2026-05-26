@@ -64,7 +64,25 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       const entries: FsEntry[] = await invoke("scan_dir", {
         path: targetPath,
       });
-      set({ treeData: entries });
+      const { treeData, rootDirs } = get();
+
+      // If refreshing a root dir or no specific path given, replace entire tree
+      if (!path || rootDirs.includes(path)) {
+        set({ treeData: entries });
+      } else {
+        // Update only the children of the matching node in-place
+        const updateChildren = (nodes: FsEntry[]): FsEntry[] =>
+          nodes.map((node) => {
+            if (node.type === "dir") {
+              if (node.path === path) {
+                return { ...node, children: entries };
+              }
+              return { ...node, children: updateChildren(node.children) };
+            }
+            return node;
+          });
+        set({ treeData: updateChildren(treeData) });
+      }
     } catch (err) {
       console.error("Failed to scan directory:", err);
     }

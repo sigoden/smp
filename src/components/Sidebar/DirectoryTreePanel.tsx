@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Folder, FolderOpen, Music, Search, Plus, X, Loader2 } from "lucide-react";
+
+import { Folder, FolderOpen, Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
@@ -25,7 +26,7 @@ function TreeNode({
   const isExpanded = isDir && expandedPaths.has(entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
 
-  const handleDoubleClick = async () => {
+  const handleClick = async () => {
     if (isDir) {
       if (!isExpanded) {
         setLoading(true);
@@ -33,7 +34,11 @@ function TreeNode({
         setLoading(false);
       }
       toggleExpand(entry.path);
-    } else {
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (!isDir) {
       // Load single track into queue
       const track = {
         path: entry.path,
@@ -55,16 +60,26 @@ function TreeNode({
           isPlaying && "text-accent-foreground bg-accent/30"
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
+        onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         title={entry.path}
       >
         {isDir ? (
           loading ? (
             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-          ) : isExpanded ? (
-            <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
           ) : (
-            <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <>
+              {isExpanded ? (
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              )}
+              {isExpanded ? (
+                <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+              ) : (
+                <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
+            </>
           )
         ) : (
           <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -154,13 +169,27 @@ export function DirectoryTreePanel() {
       <div className="px-2 py-1 border-b border-border">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium text-muted-foreground">Root Directories</span>
-          <button
-            onClick={handleAddRoot}
-            className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
-            title="Add directory"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50"
+              title="Refresh"
+            >
+              {refreshing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5" />
+              )}
+            </button>
+            <button
+              onClick={handleAddRoot}
+              className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+              title="Add directory"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
         {rootDirs.length === 0 ? (
           <p className="text-xs text-muted-foreground italic">No directories added</p>
@@ -183,22 +212,6 @@ export function DirectoryTreePanel() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Refresh button */}
-      <div className="px-2 py-1">
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
-        >
-          {refreshing ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Folder className="h-3 w-3" />
-          )}
-          Refresh
-        </button>
       </div>
 
       {/* Tree */}
