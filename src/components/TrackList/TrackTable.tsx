@@ -51,8 +51,8 @@ function TrackRow({
 
   const cellValues: Record<TrackColumn, string> = {
     title: track.title || track.path.split(/[/\\]/).pop()?.replace(/\.[^.]+$/, "") || "",
-    artist: track.artist || "Unknown Artist",
-    album: track.album || "Unknown Album",
+    artist: track.artist,
+    album: track.album,
     duration: formatDuration(track.duration),
     filename: track.path.split(/[/\\]/).pop() || track.path,
   };

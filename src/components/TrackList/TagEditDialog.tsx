@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,20 +17,11 @@ interface TagEditDialogProps {
 }
 
 export function TagEditDialog({ open, onOpenChange, track }: TagEditDialogProps) {
-  const [title, setTitle] = useState("");
-  const [artist, setArtist] = useState("");
-  const [album, setAlbum] = useState("");
+  const [title, setTitle] = useState(() => track?.title ?? "");
+  const [artist, setArtist] = useState(() => track?.artist ?? "");
+  const [album, setAlbum] = useState(() => track?.album ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (track) {
-      setTitle(track.title || "");
-      setArtist(track.artist || "");
-      setAlbum(track.album || "");
-      setError(null);
-    }
-  }, [track, open]);
 
   const handleSave = async () => {
     if (!track) return;
@@ -54,7 +45,7 @@ export function TagEditDialog({ open, onOpenChange, track }: TagEditDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent key={track?.path ?? "null"} className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Edit Tags</DialogTitle>
         </DialogHeader>

@@ -37,7 +37,7 @@ function TreeNode({
       const metadata: TrackMetadata[] = await invoke("get_metadata_batch", { paths: files });
       const tracks: Track[] = metadata.map((m) => ({
         path: m.path,
-        title: m.title || m.path.split(/[\\/]/).pop()?.replace(/\.[^.]+$/, "") || "Unknown",
+        title: m.title || m.path.split(/[\\/]/).pop()?.replace(/\.[^.]+$/, "") || "",
         artist: m.artist || "",
         album: m.album || "",
         duration: m.duration,

@@ -22,7 +22,7 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
     let filename = path
         .file_stem()
         .and_then(|s| s.to_str())
-        .unwrap_or("Unknown")
+        .unwrap_or("??")
         .to_string();
 
     let file = match read_from_path(path) {

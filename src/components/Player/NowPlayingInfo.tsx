@@ -28,9 +28,8 @@ export function NowPlayingInfo() {
       .split(/[/\\]/)
       .pop()
       ?.replace(/\.[^.]+$/, "") ||
-    "Unknown";
-  const artist = nowPlaying.artist || "Unknown Artist";
-  const album = nowPlaying.album || "Unknown Album";
+    "??";
+  const subtitle = [nowPlaying.artist, nowPlaying.album].filter(Boolean).join(" — ");
 
   return (
     <div className="flex items-center gap-3 min-w-0 w-56">
@@ -46,14 +45,16 @@ export function NowPlayingInfo() {
           </TooltipTrigger>
           <TooltipContent>{title}</TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <p className="text-xs text-muted-foreground truncate cursor-default">
-              {artist} — {album}
-            </p>
-          </TooltipTrigger>
-          <TooltipContent>{`${artist} — ${album}`}</TooltipContent>
-        </Tooltip>
+        {subtitle && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-xs text-muted-foreground truncate cursor-default">
+                {subtitle}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent>{subtitle}</TooltipContent>
+          </Tooltip>
+        )}
       </div>
     </div>
   );
