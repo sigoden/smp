@@ -81,6 +81,9 @@ function App() {
       });
 
       usePlaylistStore.setState({ activePlaylistId: settings.active_playlist_id });
+
+      // Load playlists from disk
+      await usePlaylistStore.getState().loadPlaylists();
     };
 
     init();

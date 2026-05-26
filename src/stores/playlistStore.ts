@@ -5,25 +5,29 @@ import { invoke } from "@tauri-apps/api/core";
 interface PlaylistState {
   playlists: PlaylistData[];
   activePlaylistId: string | null;
+  dirtyPlaylistIds: Set<string>;
 
   // Actions
   loadPlaylists: () => Promise<void>;
   createPlaylist: (name: string) => Promise<void>;
   renamePlaylist: (id: string, name: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
-  addTracks: (playlistId: string, tracks: Track[]) => Promise<void>;
-  removeTracks: (playlistId: string, trackIndices: number[]) => Promise<void>;
+  addTracks: (playlistId: string, tracks: Track[]) => void;
+  removeTracks: (playlistId: string, trackIndices: number[]) => void;
+  savePlaylist: (playlistId: string) => Promise<void>;
+  saveQueueAsNewPlaylist: (name: string, tracks: Track[]) => Promise<void>;
   setActivePlaylist: (id: string | null) => void;
 }
 
 export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   playlists: [],
   activePlaylistId: null,
+  dirtyPlaylistIds: new Set<string>(),
 
   loadPlaylists: async () => {
     try {
       const playlists: PlaylistData[] = await invoke("get_playlists");
-      set({ playlists });
+      set({ playlists, dirtyPlaylistIds: new Set<string>() });
     } catch (err) {
       console.error("Failed to load playlists:", err);
     }
@@ -71,8 +75,8 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }
   },
 
-  addTracks: async (playlistId: string, tracks: Track[]) => {
-    const { playlists } = get();
+  addTracks: (playlistId: string, tracks: Track[]) => {
+    const { playlists, dirtyPlaylistIds } = get();
     const playlist = playlists.find((p) => p.id === playlistId);
     if (!playlist) return;
 
@@ -81,42 +85,68 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       tracks: [...playlist.tracks, ...tracks],
     };
 
-    try {
-      await invoke("update_playlist", { playlist: updated });
-      set({
-        playlists: playlists.map((p) =>
-          p.id === playlistId ? updated : p
-        ),
-      });
-    } catch (err) {
-      console.error("Failed to add tracks:", err);
-    }
+    const nextDirty = new Set(dirtyPlaylistIds);
+    nextDirty.add(playlistId);
+
+    set({
+      playlists: playlists.map((p) =>
+        p.id === playlistId ? updated : p
+      ),
+      dirtyPlaylistIds: nextDirty,
+    });
   },
 
-  removeTracks: async (playlistId: string, trackIndices: number[]) => {
-    const { playlists } = get();
+  removeTracks: (playlistId: string, trackIndices: number[]) => {
+    const { playlists, dirtyPlaylistIds } = get();
     const playlist = playlists.find((p) => p.id === playlistId);
     if (!playlist) return;
 
-    const sorted = [...trackIndices].sort((a, b) => b - a);
-    let tracks = [...playlist.tracks];
-    for (const idx of sorted) {
-      if (idx >= 0 && idx < tracks.length) {
-        tracks.splice(idx, 1);
-      }
-    }
+    const tracks = [...playlist.tracks].filter(
+      (_, i) => !trackIndices.includes(i)
+    );
 
     const updated = { ...playlist, tracks };
 
+    const nextDirty = new Set(dirtyPlaylistIds);
+    nextDirty.add(playlistId);
+
+    set({
+      playlists: playlists.map((p) =>
+        p.id === playlistId ? updated : p
+      ),
+      dirtyPlaylistIds: nextDirty,
+    });
+  },
+
+  savePlaylist: async (playlistId: string) => {
+    const { playlists, dirtyPlaylistIds } = get();
+    if (!dirtyPlaylistIds.has(playlistId)) return;
+
+    const playlist = playlists.find((p) => p.id === playlistId);
+    if (!playlist) return;
+
     try {
+      await invoke("update_playlist", { playlist });
+      const nextDirty = new Set(dirtyPlaylistIds);
+      nextDirty.delete(playlistId);
+      set({ dirtyPlaylistIds: nextDirty });
+    } catch (err) {
+      console.error("Failed to save playlist:", err);
+    }
+  },
+
+  saveQueueAsNewPlaylist: async (name: string, tracks: Track[]) => {
+    try {
+      const playlist: PlaylistData = await invoke("create_playlist", { name });
+      const updated: PlaylistData = { ...playlist, tracks };
       await invoke("update_playlist", { playlist: updated });
+      const { playlists } = get();
       set({
-        playlists: playlists.map((p) =>
-          p.id === playlistId ? updated : p
-        ),
+        playlists: [...playlists, updated],
+        activePlaylistId: updated.id,
       });
     } catch (err) {
-      console.error("Failed to remove tracks:", err);
+      console.error("Failed to create playlist from queue:", err);
     }
   },
 

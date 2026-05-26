@@ -19,6 +19,7 @@ export function PlaylistPanel() {
   const renamePlaylist = usePlaylistStore((s) => s.renamePlaylist);
   const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist);
   const loadQueue = usePlayerStore((s) => s.loadQueue);
+  const play = usePlayerStore((s) => s.play);
 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
@@ -50,6 +51,7 @@ export function PlaylistPanel() {
     const pl = playlists.find((p) => p.id === playlistId);
     if (pl && pl.tracks.length > 0) {
       loadQueue(pl.tracks);
+      play();
     }
     setActivePlaylist(playlistId);
   };
@@ -123,7 +125,13 @@ export function PlaylistPanel() {
                   isActive && "bg-accent text-accent-foreground"
                 )}
                 onDoubleClick={() => handleDoubleClick(pl.id)}
-                onClick={() => setActivePlaylist(pl.id)}
+                onClick={() => {
+                  setActivePlaylist(pl.id);
+                  if (pl.tracks.length > 0) {
+                    loadQueue(pl.tracks);
+                    play();
+                  }
+                }}
               >
                 <ListMusic className="h-4 w-4 shrink-0 text-muted-foreground" />
 

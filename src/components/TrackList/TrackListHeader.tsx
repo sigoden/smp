@@ -1,4 +1,5 @@
-import { Columns3, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Columns3, Save, Trash2 } from "lucide-react";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useUIStore } from "../../stores/uiStore";
@@ -22,15 +23,27 @@ import type { TrackColumn } from "../../types";
 import { ALL_TRACK_COLUMNS, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 export function TrackListHeader() {
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+
   const playlists = usePlaylistStore((s) => s.playlists);
   const activePlaylistId = usePlaylistStore((s) => s.activePlaylistId);
+  const dirtyPlaylistIds = usePlaylistStore((s) => s.dirtyPlaylistIds);
+  const savePlaylist = usePlaylistStore((s) => s.savePlaylist);
+  const saveQueueAsNewPlaylist = usePlaylistStore(
+    (s) => s.saveQueueAsNewPlaylist
+  );
   const visibleColumns = useUIStore((s) => s.visibleColumns);
   const toggleColumn = useUIStore((s) => s.toggleColumn);
   const queue = usePlayerStore((s) => s.queue);
   const clearQueue = usePlayerStore((s) => s.clearQueue);
 
   const activePlaylist = playlists.find((p) => p.id === activePlaylistId);
-  const title = activePlaylist ? activePlaylist.name : "Library";
+  const title = activePlaylist ? activePlaylist.name : "Queue";
+
+  const isDirty = activePlaylistId
+    ? dirtyPlaylistIds.has(activePlaylistId)
+    : false;
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
 
@@ -38,6 +51,74 @@ export function TrackListHeader() {
     <div className="flex items-center justify-between px-4 py-2 border-b border-border">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       <div className="flex items-center gap-1">
+        {/* Save button */}
+        {activePlaylistId ? (
+          <button
+            className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+            title={isDirty ? "Save playlist changes" : "No changes to save"}
+            disabled={!isDirty}
+            onClick={() => savePlaylist(activePlaylistId)}
+          >
+            <Save className="h-4 w-4" />
+          </button>
+        ) : queue.length > 0 ? (
+          <button
+            className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            title="Save queue as new playlist"
+            onClick={() => {
+              setNewPlaylistName("");
+              setSaveDialogOpen(true);
+            }}
+          >
+            <Save className="h-4 w-4" />
+          </button>
+        ) : null}
+
+        {/* Save as new playlist dialog */}
+        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save as Playlist</DialogTitle>
+              <DialogDescription>
+                Create a new playlist from the current queue ({queue.length}{" "}
+                tracks).
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <input
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Playlist name"
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    newPlaylistName.trim().length > 0
+                  ) {
+                    saveQueueAsNewPlaylist(newPlaylistName.trim(), queue);
+                    setSaveDialogOpen(false);
+                  }
+                }}
+              />
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button
+                disabled={newPlaylistName.trim().length === 0}
+                onClick={() => {
+                  saveQueueAsNewPlaylist(newPlaylistName.trim(), queue);
+                  setSaveDialogOpen(false);
+                }}
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {queue.length > 0 && (
           <Dialog>
             <DialogTrigger asChild>
