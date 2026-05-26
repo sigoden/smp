@@ -67,7 +67,7 @@ export function PlaybackControls() {
         icon={playing ? Pause : Play}
         onClick={playing ? pause : play}
         disabled={!hasTracks}
-        size={playing ? "md" : "lg"}
+        size="lg"
         highlight
       />
       <ControlButton
