@@ -116,6 +116,7 @@ pub fn run() {
             commands::remove_playlist,
             commands::rename_playlist,
             commands::open_in_explorer,
+            commands::open_playlists_dir,
             commands::write_tags,
             commands::load_app_settings,
             commands::save_app_settings,

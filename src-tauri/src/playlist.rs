@@ -19,7 +19,7 @@ pub struct Playlist {
     pub tracks: Vec<TrackEntry>,
 }
 
-fn playlists_dir(app: &AppHandle) -> Result<PathBuf, String> {
+pub fn playlists_dir(app: &AppHandle) -> Result<PathBuf, String> {
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let dir = app_dir.join("playlists");
     fs::create_dir_all(&dir).map_err(|e| format!("Failed to create playlists dir: {}", e))?;

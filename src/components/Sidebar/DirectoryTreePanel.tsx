@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type ReactNode } from "react";
 
-import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown } from "lucide-react";
+import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, ListMusic, ListPlus } from "lucide-react";
+import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { useLibraryStore } from "../../stores/libraryStore";
@@ -17,6 +18,39 @@ import {
 } from "../ui/dialog";
 import type { FsEntry, Track, TrackMetadata } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
+
+function ContextMenuItem({
+  children,
+  onClick,
+  disabled,
+  danger,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <ContextMenuPrimitive.Item
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        danger
+          ? "text-destructive focus:bg-destructive/20 focus:text-destructive"
+          : "focus:bg-accent focus:text-accent-foreground"
+      )}
+    >
+      {children}
+    </ContextMenuPrimitive.Item>
+  );
+}
+
+function ContextSeparator() {
+  return (
+    <ContextMenuPrimitive.Separator className="-mx-1 my-1 h-px bg-border" />
+  );
+}
 
 function TreeNode({
   entry,
@@ -122,6 +156,46 @@ function TreeNode({
     }
   };
 
+  const handlePlayFile = () => {
+    const existingIdx = queue.findIndex((t) => t.path === entry.path);
+    if (existingIdx >= 0) {
+      playTrack(queue[existingIdx]);
+    } else {
+      const track: Track = {
+        path: entry.path,
+        title: "",
+        artist: "",
+        album: "",
+        duration: 0,
+      };
+      appendAndPlay([track]);
+      addTracks(activePlaylistName, [track]);
+      if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
+        saveActivePlaylist();
+      }
+    }
+  };
+
+  const handleNewPlaylistCM = async () => {
+    const tracks = await loadTracksFromDir(entry.path);
+    if (tracks.length > 0) {
+      loadQueue(tracks);
+      play();
+      syncQueuePlaylist(tracks);
+    }
+  };
+
+  const handleAppendCM = async () => {
+    const tracks = await loadTracksFromDir(entry.path);
+    if (tracks.length > 0) {
+      appendAndPlay(tracks);
+      addTracks(activePlaylistName, tracks);
+      if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
+        saveActivePlaylist();
+      }
+    }
+  };
+
   const handleNewPlaylist = async () => {
     const { dirPath } = dirDialog;
     if (!dirPath) return;
@@ -154,34 +228,67 @@ function TreeNode({
 
   return (
     <div>
-      <div
-        className={cn(
-          "flex items-center gap-1.5 px-2 py-0.5 rounded text-sm cursor-pointer hover:bg-accent/50 select-none",
-          depth > 0 && "ml-4",
-          isPlaying && "text-accent-foreground bg-accent/30"
-        )}
-        style={{ paddingLeft: `${8 + depth * 16}px` }}
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-        title={entry.path}
-      >
-        {isDir ? (
-          loading ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-          ) : (
-            <>
-              {isExpanded ? (
-                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <ContextMenuPrimitive.Root>
+        <ContextMenuPrimitive.Trigger disabled={loading} asChild>
+          <div
+            className={cn(
+              "flex items-center gap-1.5 px-2 py-0.5 rounded text-sm cursor-pointer hover:bg-accent/50 select-none",
+              depth > 0 && "ml-4",
+              isPlaying && "text-accent-foreground bg-accent/30"
+            )}
+            style={{ paddingLeft: `${8 + depth * 16}px` }}
+            onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
+            title={entry.path}
+          >
+            {isDir ? (
+              loading ? (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              )}
-            </>
-          )
-        ) : (
-          <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
-        <span className="whitespace-nowrap">{entry.name}</span>
-      </div>
+                <>
+                  {isExpanded ? (
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  )}
+                </>
+              )
+            ) : (
+              <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
+            )}
+            <span className="whitespace-nowrap">{entry.name}</span>
+          </div>
+        </ContextMenuPrimitive.Trigger>
+        <ContextMenuPrimitive.Portal>
+          <ContextMenuPrimitive.Content
+            className="z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+            alignOffset={-4}
+          >
+            <ContextMenuItem onClick={() => invoke("open_in_explorer", { path: entry.path })}>
+              <FolderOpen className="mr-2 h-3.5 w-3.5" />
+              Open In Explorer
+            </ContextMenuItem>
+            <ContextSeparator />
+            {entry.type === "file" ? (
+              <ContextMenuItem onClick={handlePlayFile}>
+                <Play className="mr-2 h-3.5 w-3.5" />
+                Play
+              </ContextMenuItem>
+            ) : (
+              <>
+                <ContextMenuItem onClick={handleNewPlaylistCM}>
+                  <ListMusic className="mr-2 h-3.5 w-3.5" />
+                  New Playlist
+                </ContextMenuItem>
+                <ContextMenuItem onClick={handleAppendCM}>
+                  <ListPlus className="mr-2 h-3.5 w-3.5" />
+                  Append Playlist
+                </ContextMenuItem>
+              </>
+            )}
+          </ContextMenuPrimitive.Content>
+        </ContextMenuPrimitive.Portal>
+      </ContextMenuPrimitive.Root>
       {isDir && isExpanded && entry.children && (
         <div>
           {entry.children.length === 0 ? (

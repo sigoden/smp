@@ -127,6 +127,13 @@ pub fn open_in_explorer(path: String) -> Result<(), String> {
 }
 
 #[command]
+pub fn open_playlists_dir(app: AppHandle) -> Result<(), String> {
+    let playlists_dir = crate::playlist::playlists_dir(&app)?;
+    open_in_explorer(playlists_dir.to_string_lossy().to_string())
+}
+
+
+#[command]
 pub fn write_tags(path: String, title: Option<String>, artist: Option<String>, album: Option<String>) -> Result<(), String> {
     crate::metadata::write_metadata(&path, title.as_deref(), artist.as_deref(), album.as_deref())
 }
