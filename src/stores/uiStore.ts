@@ -6,20 +6,24 @@ interface UIState {
   sidebarTab: SidebarTab;
   visibleColumns: TrackColumn[];
   sidebarWidth: number;
+  isLoading: boolean;
 
   // Actions
   setTab: (tab: SidebarTab) => void;
   toggleColumn: (column: TrackColumn) => void;
   setSidebarWidth: (width: number) => void;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarTab: "tree",
   visibleColumns: ALL_TRACK_COLUMNS,
   sidebarWidth: 256,
+  isLoading: false,
 
   setTab: (tab: SidebarTab) => set({ sidebarTab: tab }),
   setSidebarWidth: (width: number) => set({ sidebarWidth: width }),
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
 
   toggleColumn: (column: TrackColumn) =>
     set((state) => {

@@ -73,6 +73,15 @@
   --ring: oklch(0.72 0.16 25);
 }
 
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

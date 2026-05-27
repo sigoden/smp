@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Track, PlaylistData } from "../types";
 import { invoke } from "@tauri-apps/api/core";
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
+import { useUIStore } from "./uiStore";
 
 const FALLBACK_PLAYLIST: PlaylistData = { name: QUEUE_PLAYLIST_NAME, tracks: [] };
 
@@ -49,6 +50,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       return playlist.tracks;
     }
 
+    useUIStore.getState().setLoading(true);
     try {
       const tracks: Track[] = await invoke("get_playlist_tracks", { name });
       const { savePlaylist } = get();
@@ -57,6 +59,8 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     } catch (err) {
       console.error(`Failed to fetch tracks for playlist "${name}":`, err);
       return [];
+    } finally {
+      useUIStore.getState().setLoading(false);
     }
   },
 

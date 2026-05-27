@@ -7,8 +7,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
-import { cn } from "../../lib/utils";
-import type { FsEntry, Track, TrackMetadata } from "../../types";
+import { useUIStore } from "../../stores/uiStore";
+import { cn, loadTracksFromDir } from "../../lib/utils";
+import type { FsEntry, Track } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
 function ContextMenuItem({
@@ -64,30 +65,11 @@ function TreeNode({
   const addTracks = usePlaylistStore((s) => s.addTracks);
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
+  const setGlobalLoading = useUIStore((s) => s.setLoading);
   const [loading, setLoading] = useState(false);
   const isDir = entry.type === "dir";
   const isExpanded = isDir && expandedPaths.has(entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
-
-  /** Load all audio files from a directory and return track list */
-  const loadTracksFromDir = async (dirPath: string): Promise<Track[]> => {
-    try {
-      const files: string[] = await invoke("get_audio_files", { path: dirPath });
-      if (files.length === 0) return [];
-      const metadata: TrackMetadata[] = await invoke("get_metadata_batch", { paths: files });
-      return metadata.map((m) => ({
-        path: m.path,
-        title: m.title ?? "",
-        artist: m.artist ?? "",
-        album: m.album ?? "",
-        duration: m.duration,
-        invalid: false,
-      }));
-    } catch (err) {
-      console.error("Failed to load directory:", err);
-      return [];
-    }
-  };
 
   const handleClick = async () => {
     if (isDir) {
@@ -146,7 +128,9 @@ function TreeNode({
   };
 
   const handleReplaceQueue = async () => {
+    setGlobalLoading(true);
     const tracks = await loadTracksFromDir(entry.path);
+    setGlobalLoading(false);
     if (tracks.length > 0) {
       loadQueue(tracks);
       play();
@@ -155,7 +139,9 @@ function TreeNode({
   };
 
   const handleAddToQueue = async () => {
+    setGlobalLoading(true);
     const tracks = await loadTracksFromDir(entry.path);
+    setGlobalLoading(false);
     if (tracks.length > 0) {
       appendAndPlay(tracks);
       addTracks(activePlaylistName, tracks);

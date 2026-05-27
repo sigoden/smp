@@ -6,6 +6,7 @@ import { ResizeHandle } from "./components/Sidebar/ResizeHandle";
 import { TrackListHeader } from "./components/TrackList/TrackListHeader";
 import { TrackTable } from "./components/TrackList/TrackTable";
 import { PlayerBar } from "./components/Player/PlayerBar";
+import { LoadingBar } from "./components/ui/LoadingBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { useUIStore } from "./stores/uiStore";
@@ -194,6 +195,7 @@ function App() {
   return (
     <TooltipProvider>
       <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden select-none">
+        <LoadingBar />
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
           <aside className="relative flex-shrink-0 border-r border-border bg-muted/20 flex flex-col" style={{ width: "var(--sidebar-width, 256px)" }}>
