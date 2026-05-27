@@ -3,6 +3,8 @@ import type { Track, PlaylistData } from "../types";
 import { invoke } from "@tauri-apps/api/core";
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
 
+const FALLBACK_PLAYLIST: PlaylistData = { name: QUEUE_PLAYLIST_NAME, tracks: [] };
+
 interface PlaylistState {
   playlists: PlaylistData[];
   activePlaylistName: string;
@@ -49,10 +51,10 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
         playlist: { name, tracks: [] },
       });
       const newPlaylist: PlaylistData = { name, tracks: [] };
-      set({
-        playlists: [...playlists, newPlaylist],
+      set((state) => ({
+        playlists: [...state.playlists, newPlaylist],
         activePlaylistName: name,
-      });
+      }));
     } catch (err) {
       console.error("Failed to create playlist:", err);
     }
@@ -71,13 +73,13 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     try {
       await invoke("rename_playlist", { oldName, newName });
       const updated = { ...playlist, name: newName };
-      set({
-        playlists: playlists.map((p) =>
+      set((state) => ({
+        playlists: state.playlists.map((p) =>
           p.name === oldName ? updated : p
         ),
         activePlaylistName:
-          get().activePlaylistName === oldName ? newName : get().activePlaylistName,
-      });
+          state.activePlaylistName === oldName ? newName : state.activePlaylistName,
+      }));
     } catch (err) {
       console.error("Failed to rename playlist:", err);
     }
@@ -135,15 +137,18 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   },
 
   savePlaylist: async (playlist: PlaylistData) => {
-    const { activePlaylistName, playlists } = get();
     try {
       await invoke("sync_playlist", { playlist });
-      if (activePlaylistName === playlist.name) {
-        set({ isDirty: false });
-      }
-      if (!playlists.find((p) => p.name === playlist.name)) {
-        set({ playlists: [...playlists, playlist] });
-      }
+      set((state) => {
+        const updates: Partial<PlaylistState> = {};
+        if (state.activePlaylistName === playlist.name) {
+          updates.isDirty = false;
+        }
+        if (!state.playlists.find((p) => p.name === playlist.name)) {
+          updates.playlists = [...state.playlists, playlist];
+        }
+        return updates;
+      });
     } catch (err) {
       console.error("Failed to save playlist:", err);
     }
@@ -190,6 +195,6 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
   getActivePlaylist: () => {
     const { playlists, activePlaylistName } = get();
-    return playlists.find((p) => p.name === activePlaylistName) || { name: QUEUE_PLAYLIST_NAME, tracks: [] };
+    return playlists.find((p) => p.name === activePlaylistName) || FALLBACK_PLAYLIST;
   },
 }));

@@ -26,7 +26,8 @@ export function TrackListHeader() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
 
-  const getActivePlaylist = usePlaylistStore((s) => s.getActivePlaylist);
+  const playlists = usePlaylistStore((s) => s.playlists);
+  const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const isDirty = usePlaylistStore((s) => s.isDirty);
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const saveQueueAsNewPlaylist = usePlaylistStore(
@@ -37,7 +38,9 @@ export function TrackListHeader() {
   const queue = usePlayerStore((s) => s.queue);
   const clearQueue = usePlayerStore((s) => s.clearQueue);
 
-  const activePlaylist = getActivePlaylist();
+  const activePlaylist =
+    playlists.find((p) => p.name === activePlaylistName) ||
+    { name: QUEUE_PLAYLIST_NAME, tracks: [] };
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
   

@@ -2,6 +2,9 @@ import { create } from "zustand";
 import type { Track, PlayMode } from "../types";
 import * as audio from "../lib/audio";
 
+// Guards the next timeupdate callback after a seek() to avoid stale position overwrite
+let _seekGuard = false;
+
 interface PlayerState {
   queue: Track[];
   currentIndex: number;
@@ -166,6 +169,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const currentTime = audio.getCurrentTime();
     if (currentTime > 3) {
       audio.seek(0);
+      _seekGuard = true;
       set({ position: 0 });
       return;
     }
@@ -187,6 +191,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   seek: (time: number) => {
     audio.seek(time);
+    _seekGuard = true;
     set({ position: time });
   },
 
@@ -199,7 +204,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ playMode: mode });
   },
 
-  setPosition: (pos: number) => set({ position: pos }),
+  setPosition: (pos: number) => {
+    // Suppress stale timeupdate that was queued before a seek()
+    if (_seekGuard) {
+      _seekGuard = false;
+      return;
+    }
+    set({ position: pos });
+  },
   setDuration: (dur: number) => set({ duration: dur }),
 
   playTrack: async (track: Track) => {

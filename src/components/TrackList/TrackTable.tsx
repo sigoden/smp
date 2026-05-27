@@ -100,12 +100,15 @@ export function TrackTable() {
   const tracks = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
-  const getActivePlaylist = usePlaylistStore((s) => s.getActivePlaylist);
+  const playlists = usePlaylistStore((s) => s.playlists);
+  const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
 
   const [tagEditTrack, setTagEditTrack] = useState<Track | null>(null);
   const [tagEditOpen, setTagEditOpen] = useState(false);
 
-  const activePlaylist = getActivePlaylist();
+  const activePlaylist =
+    playlists.find((p) => p.name === activePlaylistName) ||
+    { name: QUEUE_PLAYLIST_NAME, tracks: [] };
 
   const handleEditTags = (track: Track) => {
     setTagEditTrack(track);
