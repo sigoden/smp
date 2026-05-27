@@ -129,6 +129,7 @@ export function PlaylistPanel() {
           <button
             onClick={handleCreate}
             className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            title="Confirm"
           >
             <Check className="h-3.5 w-3.5" />
           </button>
@@ -138,6 +139,7 @@ export function PlaylistPanel() {
               setNewName("");
             }}
             className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            title="Cancel"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -208,6 +210,7 @@ export function PlaylistPanel() {
                               handleRename(pl.name);
                             }}
                             className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
+                            title="Confirm rename"
                           >
                             <Check className="h-3 w-3" />
                           </button>
@@ -218,6 +221,7 @@ export function PlaylistPanel() {
                               setEditName("");
                             }}
                             className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
+                            title="Cancel rename"
                           >
                             <X className="h-3 w-3" />
                           </button>

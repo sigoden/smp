@@ -8,12 +8,14 @@ function ControlButton({
   disabled = false,
   size = "md",
   highlight = false,
+  title,
 }: {
   icon: typeof Play;
   onClick: () => void;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
   highlight?: boolean;
+  title?: string;
 }) {
   const sizeClasses = {
     sm: "p-1",
@@ -31,6 +33,7 @@ function ControlButton({
     <button
       onClick={onClick}
       disabled={disabled}
+      title={title}
       className={cn(
         "rounded-full transition-colors",
         sizeClasses[size],
@@ -61,6 +64,7 @@ export function PlaybackControls() {
         icon={SkipBack}
         onClick={prev}
         disabled={!hasTracks}
+        title="Previous Track"
       />
       <ControlButton
         icon={playing ? Pause : Play}
@@ -68,11 +72,13 @@ export function PlaybackControls() {
         disabled={!hasTracks}
         size="lg"
         highlight
+        title={playing ? "Pause" : "Play"}
       />
       <ControlButton
         icon={SkipForward}
         onClick={next}
         disabled={!hasTracks}
+        title="Next Track"
       />
     </div>
   );
