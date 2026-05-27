@@ -1,4 +1,4 @@
-import { useState, useRef, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, ListMusic, ListPlus } from "lucide-react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
@@ -8,14 +8,6 @@ import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "../ui/dialog";
 import type { FsEntry, Track, TrackMetadata } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
@@ -73,18 +65,9 @@ function TreeNode({
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
   const [loading, setLoading] = useState(false);
-  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const isDir = entry.type === "dir";
   const isExpanded = isDir && expandedPaths.has(entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
-
-  const [dirDialog, setDirDialog] = useState<{ open: boolean; dirPath: string; dirName: string }>({
-    open: false,
-    dirPath: "",
-    dirName: "",
-  });
-  const [dirLoading, setDirLoading] = useState(false);
 
   /** Load all audio files from a directory and return track list */
   const loadTracksFromDir = async (dirPath: string): Promise<Track[]> => {
@@ -105,36 +88,19 @@ function TreeNode({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (isDir) {
-      // Cancel if this click is part of a double-click
-      if (clickTimerRef.current) {
-        clearTimeout(clickTimerRef.current);
-        clickTimerRef.current = null;
-        return;
+      if (!isExpanded) {
+        setLoading(true);
+        await refreshDir(entry.path);
+        setLoading(false);
       }
-      // Small delay to distinguish single vs double click
-      clickTimerRef.current = setTimeout(async () => {
-        clickTimerRef.current = null;
-        if (!isExpanded) {
-          setLoading(true);
-          await refreshDir(entry.path);
-          setLoading(false);
-        }
-        toggleExpand(entry.path);
-      }, 200);
+      toggleExpand(entry.path);
     }
   };
 
   const handleDoubleClick = () => {
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = null;
-    }
-    if (isDir) {
-      // Show dialog to choose new playlist or append
-      setDirDialog({ open: true, dirPath: entry.path, dirName: entry.name });
-    } else {
+    if (!isDir) {
       // If track is already in the queue, jump to it; otherwise append and play
       const existingIdx = queue.findIndex((t) => t.path === entry.path);
       if (existingIdx >= 0) {
@@ -176,7 +142,7 @@ function TreeNode({
     }
   };
 
-  const handleNewPlaylistCM = async () => {
+  const handleNewPlaylist = async () => {
     const tracks = await loadTracksFromDir(entry.path);
     if (tracks.length > 0) {
       loadQueue(tracks);
@@ -185,7 +151,7 @@ function TreeNode({
     }
   };
 
-  const handleAppendCM = async () => {
+  const handleAppend = async () => {
     const tracks = await loadTracksFromDir(entry.path);
     if (tracks.length > 0) {
       appendAndPlay(tracks);
@@ -194,36 +160,6 @@ function TreeNode({
         saveActivePlaylist();
       }
     }
-  };
-
-  const handleNewPlaylist = async () => {
-    const { dirPath } = dirDialog;
-    if (!dirPath) return;
-    setDirLoading(true);
-    setDirDialog({ open: false, dirPath: "", dirName: "" });
-    const tracks = await loadTracksFromDir(dirPath);
-    if (tracks.length > 0) {
-      loadQueue(tracks);
-      play();
-      syncQueuePlaylist(tracks);
-    }
-    setDirLoading(false);
-  };
-
-  const handleAppend = async () => {
-    const { dirPath } = dirDialog;
-    if (!dirPath) return;
-    setDirLoading(true);
-    setDirDialog({ open: false, dirPath: "", dirName: "" });
-    const tracks = await loadTracksFromDir(dirPath);
-    if (tracks.length > 0) {
-      appendAndPlay(tracks);
-      addTracks(activePlaylistName, tracks);
-      if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
-        saveActivePlaylist()
-      }
-    }
-    setDirLoading(false);
   };
 
   return (
@@ -238,7 +174,7 @@ function TreeNode({
             )}
             style={{ paddingLeft: `${8 + depth * 16}px` }}
             onClick={handleClick}
-            onDoubleClick={handleDoubleClick}
+            onDoubleClick={isDir ? undefined : handleDoubleClick}
             title={entry.path}
           >
             {isDir ? (
@@ -276,11 +212,11 @@ function TreeNode({
               </ContextMenuItem>
             ) : (
               <>
-                <ContextMenuItem onClick={handleNewPlaylistCM}>
+                <ContextMenuItem onClick={handleNewPlaylist}>
                   <ListMusic className="mr-2 h-3.5 w-3.5" />
                   New Playlist
                 </ContextMenuItem>
-                <ContextMenuItem onClick={handleAppendCM}>
+                <ContextMenuItem onClick={handleAppend}>
                   <ListPlus className="mr-2 h-3.5 w-3.5" />
                   Append Playlist
                 </ContextMenuItem>
@@ -305,32 +241,7 @@ function TreeNode({
           )}
         </div>
       )}
-      <Dialog open={dirDialog.open} onOpenChange={(o) => !o && setDirDialog({ open: false, dirPath: "", dirName: "" })}>
-        <DialogContent className="sm:max-w-[360px]">
-          <DialogHeader>
-            <DialogTitle>Load Directory</DialogTitle>
-            <DialogDescription>
-              Choose how to add tracks from <strong>{dirDialog.dirName}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="default"
-              onClick={handleNewPlaylist}
-              disabled={dirLoading}
-            >
-              New Playlist
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleAppend}
-              disabled={dirLoading}
-            >
-              Append Queue
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
