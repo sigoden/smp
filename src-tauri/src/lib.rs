@@ -1,4 +1,5 @@
 mod commands;
+mod log_writer;
 mod metadata;
 mod playlist;
 mod scanner;
@@ -9,6 +10,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Listener, Manager,
 };
+use tauri_plugin_log::{Target, TargetKind};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -17,8 +19,23 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             app.handle().plugin(
-                tauri_plugin_log::Builder::default()
+                tauri_plugin_log::Builder::new()
                     .level(log::LevelFilter::Info)
+                    .targets([
+                        Target::new(TargetKind::Stdout),
+                        Target::new(TargetKind::LogDir {
+                            file_name: Some("app".into()),
+                        }),
+                    ])
+                    .format(|out, message, record| {
+                        out.finish(format_args!(
+                            "{} {} [{}] {}",
+                            chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%.3f%:z"),
+                            record.level(),
+                            record.target(),
+                            message
+                        ))
+                    })
                     .build(),
             )?;
 
@@ -46,25 +63,23 @@ pub fn run() {
                 .icon(tray_icon)
                 .menu(&menu)
                 .tooltip("Music Player")
-                .on_menu_event(|app, event| {
-                    match event.id().as_ref() {
-                        "play_pause" => {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.emit("tray-action", "play-pause");
-                            }
+                .on_menu_event(|app, event| match event.id().as_ref() {
+                    "play_pause" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("tray-action", "play-pause");
                         }
-                        "next" => {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.emit("tray-action", "next");
-                            }
-                        }
-                        "prev" => {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.emit("tray-action", "prev");
-                            }
-                        }
-                        _ => {}
                     }
+                    "next" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("tray-action", "next");
+                        }
+                    }
+                    "prev" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("tray-action", "prev");
+                        }
+                    }
+                    _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click {
@@ -95,6 +110,15 @@ pub fn run() {
                 let playing = event.payload().trim_matches('"');
                 let label = if playing == "true" { "Pause" } else { "Play" };
                 let _ = play_pause_clone.set_text(label);
+            });
+
+            // Listen for log entries from frontend
+            let app_handle = app.handle().clone();
+            app.listen("log-entry", move |event| {
+                let payload = event.payload();
+                if let Ok(entry) = serde_json::from_str::<log_writer::LogEntry>(payload) {
+                    let _ = log_writer::write_log_entry(&app_handle, &entry);
+                }
             });
             Ok(())
         })
