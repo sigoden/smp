@@ -80,11 +80,6 @@ export function PlaylistPanel() {
     setEditName("");
   };
 
-  const handleDelete = async (name: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await deletePlaylist(name);
-  };
-
   const handleDoubleClick = (playlistName: string) => {
     const pl = playlists.find((p) => p.name === playlistName);
     if (pl && pl.tracks.length > 0) {
@@ -239,13 +234,6 @@ export function PlaylistPanel() {
                           >
                             <Pencil className="h-3 w-3" />
                           </button>
-                          <button
-                            onClick={(e) => handleDelete(pl.name, e)}
-                            className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
                         </>
                       )}
                     </div>
@@ -274,6 +262,14 @@ export function PlaylistPanel() {
                     >
                       <Play className="mr-2 h-3.5 w-3.5" />
                       Play
+                    </ContextMenuItem>
+                    <ContextSeparator />
+                    <ContextMenuItem
+                      onClick={() => deletePlaylist(pl.name)}
+                      danger
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Delete
                     </ContextMenuItem>
                   </ContextMenuPrimitive.Content>
                 </ContextMenuPrimitive.Portal>
