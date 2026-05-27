@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 
-import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, ListMusic, ListPlus } from "lucide-react";
+import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, RefreshCw, PlusCircle } from "lucide-react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
@@ -142,7 +142,7 @@ function TreeNode({
     }
   };
 
-  const handleNewPlaylist = async () => {
+  const handleReplaceQueue = async () => {
     const tracks = await loadTracksFromDir(entry.path);
     if (tracks.length > 0) {
       loadQueue(tracks);
@@ -151,7 +151,7 @@ function TreeNode({
     }
   };
 
-  const handleAppend = async () => {
+  const handleAddToQueue = async () => {
     const tracks = await loadTracksFromDir(entry.path);
     if (tracks.length > 0) {
       appendAndPlay(tracks);
@@ -212,13 +212,13 @@ function TreeNode({
               </ContextMenuItem>
             ) : (
               <>
-                <ContextMenuItem onClick={handleNewPlaylist}>
-                  <ListMusic className="mr-2 h-3.5 w-3.5" />
-                  New Playlist
+                <ContextMenuItem onClick={handleReplaceQueue}>
+                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                  Replace Queue
                 </ContextMenuItem>
-                <ContextMenuItem onClick={handleAppend}>
-                  <ListPlus className="mr-2 h-3.5 w-3.5" />
-                  Append Playlist
+                <ContextMenuItem onClick={handleAddToQueue}>
+                  <PlusCircle className="mr-2 h-3.5 w-3.5" />
+                  Add to Queue
                 </ContextMenuItem>
               </>
             )}
