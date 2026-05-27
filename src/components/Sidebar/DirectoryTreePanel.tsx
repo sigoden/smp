@@ -3,12 +3,11 @@ import { useState, type ReactNode } from "react";
 import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, RefreshCw, PlusCircle } from "lucide-react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { open } from "@tauri-apps/plugin-dialog";
-import { invoke } from "@tauri-apps/api/core";
 import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { useUIStore } from "../../stores/uiStore";
-import { cn, loadTracksFromDir } from "../../lib/utils";
+import { cn, loadTracksFromDir, openContainerFolder } from "../../lib/utils";
 import type { FsEntry, Track } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
@@ -189,9 +188,9 @@ function TreeNode({
             className="z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
             alignOffset={-4}
           >
-            <ContextMenuItem onClick={() => invoke("open_in_explorer", { path: entry.path })}>
+            <ContextMenuItem onClick={() => openContainerFolder(entry.path)}>
               <FolderOpen className="mr-2 h-3.5 w-3.5" />
-              Open In Explorer
+              Open Containing Folder
             </ContextMenuItem>
             <ContextSeparator />
             {entry.type === "file" ? (

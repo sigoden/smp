@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
-import { invoke } from "@tauri-apps/api/core";
 import { FolderOpen, Tags, Trash2 } from "lucide-react";
 import { usePlaylistStore } from "../../stores/playlistStore";
-import { cn } from "../../lib/utils";
+import { cn, openContainerFolder } from "../../lib/utils";
 import type { Track } from "../../types";
 
 function ContextMenuItem({
@@ -56,7 +55,7 @@ export function TrackContextMenu({
   const removeTracks = usePlaylistStore((s) => s.removeTracks);
 
   const handleOpenInExplorer = () => {
-    invoke("open_in_explorer", { path: track.path });
+    openContainerFolder(track.path);
   };
 
   const handleDeleteFromPlaylist = () => {
@@ -77,7 +76,7 @@ export function TrackContextMenu({
         >
           <ContextMenuItem onClick={handleOpenInExplorer} disabled={track.invalid}>
             <FolderOpen className="mr-2 h-3.5 w-3.5" />
-            Open in File Manager
+            Open Containing Folder
           </ContextMenuItem>
           <ContextMenuItem onClick={onEditTags} disabled={track.invalid}>
             <Tags className="mr-2 h-3.5 w-3.5" />

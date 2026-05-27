@@ -17,6 +17,15 @@ export function createQueuePlaylist(): PlaylistData {
   }
 }
 
+/** Open the containing folder of a file/directory path in the system file manager */
+export async function openContainerFolder(filePath: string): Promise<void> {
+  // Strip trailing separator, then extract parent directory
+  const normalized = filePath.replace(/[/\\]$/, '');
+  const lastSep = Math.max(normalized.lastIndexOf('/'), normalized.lastIndexOf('\\'));
+  const dirPath = lastSep > 0 ? normalized.substring(0, lastSep) : normalized;
+  await invoke("open_in_explorer", { path: dirPath });
+}
+
 /** Load all audio files from a directory and return track list */
 export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
   try {

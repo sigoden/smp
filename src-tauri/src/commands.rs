@@ -86,11 +86,10 @@ pub fn open_in_explorer(path: String) -> Result<(), String> {
     } else {
         path
     };
-    // Use explorer /select, to highlight the file if it exists
     let arg = if path.is_file() {
-        format!("/select,\"{}\"", path.to_string_lossy())
+        format!("/select,{}", path.to_string_lossy())
     } else {
-        format!("\"{}\"", dir.to_string_lossy())
+        dir.to_string_lossy().to_string()
     };
     std::process::Command::new("explorer")
         .arg(&arg)

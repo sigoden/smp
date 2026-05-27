@@ -250,7 +250,7 @@ export function PlaylistPanel() {
                       onClick={() => invoke("open_playlists_dir")}
                     >
                       <FolderOpen className="mr-2 h-3.5 w-3.5" />
-                      Open In Explorer
+                      Open Containing Folder
                     </ContextMenuItem>
                     <ContextSeparator />
                     <ContextMenuItem
