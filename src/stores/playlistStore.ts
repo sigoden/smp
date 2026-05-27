@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Track, PlaylistData } from "../types";
-import { invoke } from "@tauri-apps/api/core";
+import { listPlaylists, loadPlaylistTracks, savePlaylist, renamePlaylist, deletePlaylist } from "../lib/utils";
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
 import { useUIStore } from "./uiStore";
 
@@ -33,7 +33,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
   loadPlaylists: async () => {
     try {
-      const playlists: PlaylistData[] = await invoke("get_playlists");
+      const playlists: PlaylistData[] = await listPlaylists();
       set({
         playlists: playlists.map((p) => ({ ...p, tracks: [], loaded: false })),
         isDirty: false,
@@ -52,7 +52,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
     useUIStore.getState().setLoading(true);
     try {
-      const tracks: Track[] = await invoke("get_playlist_tracks", { name });
+      const tracks: Track[] = await loadPlaylistTracks(name);
       const { savePlaylist } = get();
       await savePlaylist({ name, tracks });
       return tracks;
@@ -71,9 +71,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
         console.error("Playlist with this name already exists");
         return;
       }
-      await invoke("sync_playlist", {
-        playlist: { name, tracks: [] },
-      });
+      await savePlaylist({ name, tracks: [] });
       const newPlaylist: PlaylistData = { name, tracks: [] };
       set((state) => ({
         playlists: [...state.playlists, newPlaylist],
@@ -95,7 +93,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }
 
     try {
-      await invoke("rename_playlist", { oldName, newName });
+      await renamePlaylist(oldName, newName);
       const updated = { ...playlist, name: newName };
       set((state) => ({
         playlists: state.playlists.map((p) =>
@@ -111,7 +109,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
   deletePlaylist: async (name: string) => {
     try {
-      await invoke("remove_playlist", { name });
+      await deletePlaylist(name);
       const { playlists, activePlaylistName } = get();
       set({
         playlists: playlists.filter((p) => p.name !== name),
@@ -174,7 +172,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   savePlaylist: async (playlist: PlaylistData) => {
     playlist = { ...playlist, track_count: playlist.tracks.length, loaded: true };
     try {
-      await invoke("sync_playlist", { playlist });
+      await savePlaylist(playlist);
       set((state) => {
         const updates: Partial<PlaylistState> = {};
         if (state.activePlaylistName === playlist.name) {

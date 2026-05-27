@@ -14,7 +14,7 @@ import { usePlayerStore } from "./stores/playerStore";
 import { usePlaylistStore } from "./stores/playlistStore";
 import { useLibraryStore } from "./stores/libraryStore";
 import { setCallbacks } from "./lib/audio";
-import { loadSettings, saveSettings } from "./lib/settings";
+import { loadSettings, saveSettings } from "./lib/utils";
 import type { PlayMode, SidebarTab, TrackColumn } from "./types";
 
 function App() {

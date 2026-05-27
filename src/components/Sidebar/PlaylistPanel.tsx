@@ -9,7 +9,7 @@ import {
   FolderOpen,
   Play,
 } from "lucide-react";
-import { invoke } from "@tauri-apps/api/core";
+import { openPlaylistsDir } from "../../lib/utils";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
@@ -247,7 +247,7 @@ export function PlaylistPanel() {
                     alignOffset={-4}
                   >
                     <ContextMenuItem
-                      onClick={() => invoke("open_playlists_dir")}
+                      onClick={() => openPlaylistsDir()}
                     >
                       <FolderOpen className="mr-2 h-3.5 w-3.5" />
                       Open Containing Folder

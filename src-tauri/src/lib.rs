@@ -107,20 +107,20 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
-            commands::scan_dir,
-            commands::get_audio_files,
-            commands::get_metadata,
+            commands::scan_directory,
+            commands::collect_audio_files,
+            commands::read_metadata,
             commands::get_metadata_batch,
-            commands::get_playlist_tracks,
-            commands::get_playlists,
-            commands::sync_playlist,
-            commands::remove_playlist,
+            commands::load_playlist_tracks,
+            commands::list_playlists,
+            commands::save_playlist,
+            commands::delete_playlist,
             commands::rename_playlist,
             commands::open_in_explorer,
             commands::open_playlists_dir,
-            commands::write_tags,
-            commands::load_app_settings,
-            commands::save_app_settings,
+            commands::write_metadata,
+            commands::load_settings,
+            commands::save_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

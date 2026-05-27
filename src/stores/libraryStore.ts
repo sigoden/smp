@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { FsEntry } from "../types";
-import { invoke } from "@tauri-apps/api/core";
+import { scanDirectory } from "../lib/utils";
 
 interface LibraryState {
   rootDirs: string[];
@@ -61,9 +61,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     try {
       const targetPath = path || (get().rootDirs[0]);
       if (!targetPath) return;
-      const entries: FsEntry[] = await invoke("scan_dir", {
-        path: targetPath,
-      });
+      const entries: FsEntry[] = await scanDirectory(targetPath);
       const { treeData, rootDirs } = get();
 
       // If refreshing a root dir or no specific path given, replace entire tree
@@ -96,9 +94,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     }
     try {
       const firstDir = rootDirs[0];
-      const entries: FsEntry[] = await invoke("scan_dir", {
-        path: firstDir,
-      });
+      const entries: FsEntry[] = await scanDirectory(firstDir);
       set({ treeData: entries });
     } catch (err) {
       console.error("Failed to scan directory:", err);

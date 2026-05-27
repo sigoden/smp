@@ -1,30 +1,30 @@
-use crate::metadata::{read_metadata, TrackMetadata};
-use crate::playlist::{delete_playlist, list_playlists, load_playlist_tracks, save_playlist, Playlist, TrackEntry};
-use crate::scanner::{collect_audio_files, scan_directory, FsEntry};
-use crate::settings::{load_settings, save_settings, AppSettings};
+use crate::metadata::TrackMetadata;
+use crate::playlist::{Playlist, TrackEntry};
+use crate::scanner::FsEntry;
+use crate::settings::AppSettings;
 use tauri::AppHandle;
 use tauri::command;
 
 #[command]
-pub fn scan_dir(path: String) -> Result<Vec<FsEntry>, String> {
-    scan_directory(&path)
+pub fn scan_directory(path: String) -> Result<Vec<FsEntry>, String> {
+    crate::scanner::scan_directory(&path)
 }
 
 #[command]
-pub fn get_audio_files(path: String) -> Result<Vec<String>, String> {
-    collect_audio_files(&path)
+pub fn collect_audio_files(path: String) -> Result<Vec<String>, String> {
+    crate::scanner::collect_audio_files(&path)
 }
 
 #[command]
-pub fn get_metadata(path: String) -> Result<TrackMetadata, String> {
-    read_metadata(&path)
+pub fn read_metadata(path: String) -> Result<TrackMetadata, String> {
+    crate::metadata::read_metadata(&path)
 }
 
 #[command]
 pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, String> {
     let mut results = Vec::with_capacity(paths.len());
     for path in paths {
-        match read_metadata(&path) {
+        match crate::metadata::read_metadata(&path) {
             Ok(meta) => results.push(meta),
             Err(e) => {
                 log::warn!("Failed to read metadata for {}: {}", path, e);
@@ -43,23 +43,23 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
 }
 
 #[command]
-pub fn get_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
-    list_playlists(&app)
+pub fn list_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
+    crate::playlist::list_playlists(&app)
 }
 
 #[command]
-pub fn get_playlist_tracks(app: AppHandle, name: String) -> Result<Vec<TrackEntry>, String> {
-    load_playlist_tracks(&app, &name)
+pub fn load_playlist_tracks(app: AppHandle, name: String) -> Result<Vec<TrackEntry>, String> {
+    crate::playlist::load_playlist_tracks(&app, &name)
 }
 
 #[command]
-pub fn sync_playlist(app: AppHandle, playlist: Playlist) -> Result<(), String> {
-    save_playlist(&app, &playlist)
+pub fn save_playlist(app: AppHandle, playlist: Playlist) -> Result<(), String> {
+    crate::playlist::save_playlist(&app, &playlist)
 }
 
 #[command]
-pub fn remove_playlist(app: AppHandle, name: String) -> Result<(), String> {
-    delete_playlist(&app, &name)
+pub fn delete_playlist(app: AppHandle, name: String) -> Result<(), String> {
+    crate::playlist::delete_playlist(&app, &name)
 }
 
 #[command]
@@ -68,13 +68,13 @@ pub fn rename_playlist(app: AppHandle, old_name: String, new_name: String) -> Re
 }
 
 #[command]
-pub fn load_app_settings(app: AppHandle) -> AppSettings {
-    load_settings(&app)
+pub fn load_settings(app: AppHandle) -> AppSettings {
+    crate::settings::load_settings(&app)
 }
 
 #[command]
-pub fn save_app_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
-    save_settings(&app, &settings)
+pub fn save_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
+    crate::settings::save_settings(&app, &settings)
 }
 
 #[cfg(target_os = "windows")]
@@ -138,6 +138,6 @@ pub fn open_playlists_dir(app: AppHandle) -> Result<(), String> {
 
 
 #[command]
-pub fn write_tags(path: String, title: Option<String>, artist: Option<String>, album: Option<String>) -> Result<(), String> {
+pub fn write_metadata(path: String, title: Option<String>, artist: Option<String>, album: Option<String>) -> Result<(), String> {
     crate::metadata::write_metadata(&path, title.as_deref(), artist.as_deref(), album.as_deref())
 }

@@ -40,6 +40,19 @@ export interface PlaylistData {
   loaded?: boolean;
 }
 
+/** Mirrors the Rust AppSettings struct */
+export interface AppSettings {
+  root_dirs: string[];
+  expanded_paths: string[];
+  volume: number;
+  play_mode: string;
+  visible_columns: string[];
+  sidebar_tab: string;
+  active_playlist_name: string;
+  sidebar_width: number;
+  track_index: number;
+}
+
 /** Tree node for the file tree (used for UI display) */
 export interface TreeNode {
   name: string;

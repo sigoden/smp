@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { invoke } from "@tauri-apps/api/core";
+import { writeMetadata } from "../../lib/utils";
 import type { Track } from "../../types";
 
 interface TagEditDialogProps {
@@ -29,12 +29,7 @@ export function TagEditDialog({ open, onOpenChange, track }: TagEditDialogProps)
     setError(null);
 
     try {
-      await invoke("write_tags", {
-        path: track.path,
-        title,
-        artist,
-        album,
-      });
+      await writeMetadata(track.path, title, artist, album);
       onOpenChange(false);
     } catch (err) {
       setError(String(err));
