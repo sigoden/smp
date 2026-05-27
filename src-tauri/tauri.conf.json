@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Music Player",
+  "productName": "Simple Music Player",
   "version": "0.1.0",
-  "identifier": "com.smp.musicplayer",
+  "identifier": "SimpleMusicPlayer",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420"
@@ -11,7 +11,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Music Player",
+        "title": "Simple Music Player",
         "width": 1200,
         "height": 800,
         "minWidth": 900,

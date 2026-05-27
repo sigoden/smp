@@ -1,5 +1,6 @@
 {
   "name": "smp",
+  "description": "Simple Music Player",
   "private": true,
   "version": "0.1.0",
   "type": "module",

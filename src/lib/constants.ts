@@ -1,6 +1,6 @@
 import type { TrackColumn } from "../types";
 
-export const QUEUE_PLAYLIST_NAME = "QUEUE";
+export const QUEUE_PLAYLIST_NAME = "PLAYING";
 
 export const ALL_TRACK_COLUMNS: TrackColumn[] = [
   "title",
