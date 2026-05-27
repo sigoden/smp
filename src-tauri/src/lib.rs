@@ -111,6 +111,7 @@ pub fn run() {
             commands::get_audio_files,
             commands::get_metadata,
             commands::get_metadata_batch,
+            commands::get_playlist_tracks,
             commands::get_playlists,
             commands::sync_playlist,
             commands::remove_playlist,

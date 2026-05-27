@@ -81,6 +81,7 @@ function TreeNode({
         artist: m.artist ?? "",
         album: m.album ?? "",
         duration: m.duration,
+        invalid: false,
       }));
     } catch (err) {
       console.error("Failed to load directory:", err);
@@ -112,6 +113,7 @@ function TreeNode({
           artist: "",
           album: "",
           duration: 0,
+          invalid: false,
         };
         appendAndPlay([track]);
         addTracks(activePlaylistName, [track]);
@@ -133,6 +135,7 @@ function TreeNode({
         artist: "",
         album: "",
         duration: 0,
+        invalid: false,
       };
       appendAndPlay([track]);
       addTracks(activePlaylistName, [track]);

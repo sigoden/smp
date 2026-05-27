@@ -102,15 +102,23 @@ function App() {
         visibleColumns: settings.visible_columns as TrackColumn[],
       });
 
-      const playlistsStore = await usePlaylistStore.getState();
+      const playlistsStore = usePlaylistStore.getState();
 
-      // Load playlists from disk
+      // Load playlists from disk (lightweight — no tracks yet)
       await playlistsStore.loadPlaylists();
 
       playlistsStore.setActivePlaylist(settings.active_playlist_name);
 
-      const activePlaylist = playlistsStore.getActivePlaylist();
-      playerStore.loadQueue(activePlaylist.tracks, settings.track_index >= 0 ? settings.track_index : undefined);
+      // Fetch tracks for the active playlist and load into queue
+      const activeName = playlistsStore.getActivePlaylist().name;
+      const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(activeName);
+      let startIndex: number | undefined;
+      if (settings.track_index >= 0 && settings.track_index < resolvedTracks.length) {
+        startIndex = settings.track_index;
+      } else if (resolvedTracks.length > 0) {
+        startIndex = 0;
+      }
+      playerStore.loadQueue(resolvedTracks, startIndex);
 
     };
 

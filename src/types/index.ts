@@ -20,6 +20,7 @@ export interface Track {
   artist: string;
   album: string;
   duration: number;
+  invalid: boolean;
 }
 
 /** Play mode */
@@ -35,6 +36,8 @@ export type TrackColumn = "artist" | "title" | "album" | "filename" | "duration"
 export interface PlaylistData {
   name: string;
   tracks: Track[];
+  track_count?: number;
+  loaded?: boolean;
 }
 
 /** Tree node for the file tree (used for UI display) */

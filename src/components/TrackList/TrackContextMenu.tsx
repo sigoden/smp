@@ -75,11 +75,11 @@ export function TrackContextMenu({
           className="z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
           alignOffset={-4}
         >
-          <ContextMenuItem onClick={handleOpenInExplorer}>
+          <ContextMenuItem onClick={handleOpenInExplorer} disabled={track.invalid}>
             <FolderOpen className="mr-2 h-3.5 w-3.5" />
             Open in File Manager
           </ContextMenuItem>
-          <ContextMenuItem onClick={onEditTags}>
+          <ContextMenuItem onClick={onEditTags} disabled={track.invalid}>
             <Tags className="mr-2 h-3.5 w-3.5" />
             Edit Tags
           </ContextMenuItem>

@@ -10,8 +10,8 @@ interface PlaylistState {
   activePlaylistName: string;
   isDirty: boolean;
 
-  // Actions
   loadPlaylists: () => Promise<void>;
+  fetchTracksForPlaylist: (name: string) => Promise<Track[]>;
   createPlaylist: (name: string) => Promise<void>;
   renamePlaylist: (oldName: string, newName: string) => Promise<void>;
   deletePlaylist: (name: string) => Promise<void>;
@@ -33,10 +33,30 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   loadPlaylists: async () => {
     try {
       const playlists: PlaylistData[] = await invoke("get_playlists");
-      // QUEUE is not added to the array — getActivePlaylist handles it via fallback
-      set({ playlists, isDirty: false });
+      set({
+        playlists: playlists.map((p) => ({ ...p, tracks: [], loaded: false })),
+        isDirty: false,
+      });
     } catch (err) {
       console.error("Failed to load playlists:", err);
+    }
+  },
+
+  fetchTracksForPlaylist: async (name: string): Promise<Track[]> => {
+    const { playlists } = get();
+    const playlist = playlists.find((p) => p.name === name);
+    if (playlist?.loaded) {
+      return playlist.tracks;
+    }
+
+    try {
+      const tracks: Track[] = await invoke("get_playlist_tracks", { name });
+      const { savePlaylist } = get();
+      await savePlaylist({ name, tracks });
+      return tracks;
+    } catch (err) {
+      console.error(`Failed to fetch tracks for playlist "${name}":`, err);
+      return [];
     }
   },
 
@@ -102,11 +122,18 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   addTracks: (playlistName: string, tracks: Track[]) => {
     const { playlists, activePlaylistName } = get();
     const playlist = playlists.find((p) => p.name === playlistName);
-    if (!playlist) return;
+    if (!playlist || !playlist.loaded) return;
+
+    const oldTracks = playlist.tracks;
+    const toAddTracks = tracks.filter(
+      v => oldTracks.every(t => t.path !== v.path)
+    );
+    const newTracks = [...oldTracks, ...toAddTracks];
 
     const updated = {
       ...playlist,
-      tracks: [...playlist.tracks, ...tracks],
+      tracks: newTracks,
+      track_count: newTracks.length,
     };
 
     set({
@@ -120,13 +147,17 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   removeTracks: (playlistName: string, trackIndices: number[]) => {
     const { playlists, activePlaylistName } = get();
     const playlist = playlists.find((p) => p.name === playlistName);
-    if (!playlist) return;
+    if (!playlist || !playlist.loaded) return;
 
-    const tracks = [...playlist.tracks].filter(
+    const newTracks = [...playlist.tracks].filter(
       (_, i) => !trackIndices.includes(i)
     );
 
-    const updated = { ...playlist, tracks };
+    const updated = {
+      ...playlist,
+      tracks: newTracks,
+      track_count: newTracks.length
+    };
 
     set({
       playlists: playlists.map((p) =>
@@ -137,6 +168,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   },
 
   savePlaylist: async (playlist: PlaylistData) => {
+    playlist = { ...playlist, track_count: playlist.tracks.length, loaded: true };
     try {
       await invoke("sync_playlist", { playlist });
       set((state) => {
@@ -156,14 +188,13 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
 
   saveQueueAsNewPlaylist: async (name: string, tracks: Track[]) => {
     const { savePlaylist, setActivePlaylist, playlists } = get();
-    // Duplicate name check
     if (playlists.some((p) => p.name === name)) {
       console.error("Playlist already exists:", name);
       return;
     }
     const playlist: PlaylistData = { name, tracks };
     await savePlaylist(playlist);
-    setActivePlaylist(playlist.name);
+    setActivePlaylist(name);
   },
 
   saveActivePlaylist: async () => {

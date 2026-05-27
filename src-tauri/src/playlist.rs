@@ -11,12 +11,16 @@ pub struct TrackEntry {
     pub artist: Option<String>,
     pub album: Option<String>,
     pub duration: f64,
+    #[serde(default)]
+    pub invalid: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Playlist {
     pub name: String,
     pub tracks: Vec<TrackEntry>,
+    #[serde(default)]
+    pub track_count: usize,
 }
 
 pub fn playlists_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -85,6 +89,7 @@ fn m3u8_to_playlist(name: &str, content: &str) -> Playlist {
             artist,
             album: None,
             duration,
+            invalid: false,
         });
         current_extinf = None;
     }
@@ -92,10 +97,11 @@ fn m3u8_to_playlist(name: &str, content: &str) -> Playlist {
     Playlist {
         name: name.to_string(),
         tracks,
+        track_count: 0,
     }
 }
 
-fn sanitize_filename(name: &str) -> String {
+pub(crate) fn sanitize_filename(name: &str) -> String {
     name.chars()
         .map(|c| {
             if c.is_alphabetic() || c.is_ascii_digit() || c == '-' || c == '_' || c == '.' || c == ' '
@@ -108,7 +114,11 @@ fn sanitize_filename(name: &str) -> String {
         .collect()
 }
 
-pub fn load_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
+
+/// List all playlists with lightweight metadata (no track data).
+/// Each returned playlist has an empty `tracks` vector and a `track_count`
+/// computed by counting non-comment, non-empty lines in the .m3u8 file.
+pub fn list_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
     let dir = playlists_dir(app)?;
     let mut playlists = Vec::new();
 
@@ -116,25 +126,75 @@ pub fn load_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
         return Ok(playlists);
     }
 
-    let entries = fs::read_dir(&dir).map_err(|e| format!("Failed to read playlists dir: {}", e))?;
+    let entries = fs::read_dir(&dir)
+        .map_err(|e| format!("Failed to read playlists dir: {}", e))?;
 
     for entry in entries.flatten() {
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("m3u8") {
-            let content =
-                fs::read_to_string(&path).map_err(|e| format!("Failed to read playlist: {}", e))?;
+            let content = fs::read_to_string(&path)
+                .map_err(|e| format!("Failed to read playlist: {}", e))?;
             let name = path
                 .file_stem()
                 .and_then(|s| s.to_str())
                 .unwrap_or("Unknown")
                 .to_string();
-            let playlist = m3u8_to_playlist(&name, &content);
-            playlists.push(playlist);
+
+            // Count non-comment, non-empty lines as track count
+            let track_count = content
+                .lines()
+                .filter(|line| {
+                    let line = line.trim();
+                    !line.is_empty() && !line.starts_with('#')
+                })
+                .count();
+
+            playlists.push(Playlist {
+                name,
+                tracks: Vec::new(),
+                track_count,
+            });
         }
     }
 
     playlists.sort_by_key(|a| a.name.to_lowercase());
     Ok(playlists)
+}
+
+/// Load and validate tracks for a single playlist by name.
+/// Reads the .m3u8 file, parses EXTINF metadata, then validates
+/// each track: checks file existence and re-reads audio duration.
+pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntry>, String> {
+    let dir = playlists_dir(app)?;
+    let filename = sanitize_filename(name);
+    let path = dir.join(format!("{}.m3u8", filename));
+
+    let content = fs::read_to_string(&path)
+        .map_err(|e| format!("Failed to read playlist '{}': {}", name, e))?;
+
+    // Use the pure parser (unchanged) to parse the m3u8 content
+    let mut playlist = m3u8_to_playlist(name, &content);
+
+    // Externalized validation — post-process each track
+    for track in &mut playlist.tracks {
+        if !std::path::Path::new(&track.path).exists() {
+            track.invalid = true;
+        } else {
+            // File exists — re-read duration from actual audio metadata
+            // Note: title/artist/album trust m3u8 inline metadata per scope
+            match crate::metadata::read_metadata(&track.path) {
+                Ok(meta) => {
+                    track.duration = meta.duration;
+                }
+                Err(e) => {
+                    log::warn!("Failed to read metadata for {}: {}", track.path, e);
+                    // Keep EXTINF duration as fallback
+                }
+            }
+        }
+    }
+
+    Ok(playlist.tracks)
 }
 
 pub fn save_playlist(app: &AppHandle, playlist: &Playlist) -> Result<(), String> {

@@ -21,6 +21,7 @@ import {
 import { Button } from "../ui/button";
 import type { TrackColumn } from "../../types";
 import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { createQueuePlaylist } from "../../lib/utils";
 
 export function TrackListHeader() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -39,8 +40,7 @@ export function TrackListHeader() {
   const clearQueue = usePlayerStore((s) => s.clearQueue);
 
   const activePlaylist =
-    playlists.find((p) => p.name === activePlaylistName) ||
-    { name: QUEUE_PLAYLIST_NAME, tracks: [] };
+    playlists.find((p) => p.name === activePlaylistName) || createQueuePlaylist();
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
   

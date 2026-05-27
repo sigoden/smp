@@ -56,6 +56,7 @@ export function PlaylistPanel() {
   const createPlaylist = usePlaylistStore((s) => s.createPlaylist);
   const renamePlaylist = usePlaylistStore((s) => s.renamePlaylist);
   const deletePlaylist = usePlaylistStore((s) => s.deletePlaylist);
+  const fetchTracksForPlaylist = usePlaylistStore((s) => s.fetchTracksForPlaylist);
   const loadQueue = usePlayerStore((s) => s.loadQueue);
   const play = usePlayerStore((s) => s.play);
 
@@ -80,10 +81,10 @@ export function PlaylistPanel() {
     setEditName("");
   };
 
-  const handleDoubleClick = (playlistName: string) => {
-    const pl = playlists.find((p) => p.name === playlistName);
-    if (pl && pl.tracks.length > 0) {
-      loadQueue(pl.tracks);
+  const handleDoubleClick = async (playlistName: string) => {
+    const tracks = await fetchTracksForPlaylist(playlistName);
+    if (tracks.length > 0) {
+      loadQueue(tracks);
       play();
     }
     setActivePlaylist(playlistName);
@@ -161,10 +162,11 @@ export function PlaylistPanel() {
                       isActive && "bg-accent text-accent-foreground"
                     )}
                     onDoubleClick={() => handleDoubleClick(pl.name)}
-                    onClick={() => {
+                    onClick={async () => {
                       setActivePlaylist(pl.name);
-                      if (pl.tracks.length > 0) {
-                        loadQueue(pl.tracks);
+                      const tracks = await fetchTracksForPlaylist(pl.name);
+                      if (tracks.length > 0) {
+                        loadQueue(tracks);
                         play();
                       }
                     }}
@@ -192,7 +194,7 @@ export function PlaylistPanel() {
                     )}
 
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {pl.tracks.length}
+                      {pl?.track_count ?? 0}
                     </span>
 
                     {/* Action buttons — visible on hover or when active */}
@@ -252,10 +254,11 @@ export function PlaylistPanel() {
                     </ContextMenuItem>
                     <ContextSeparator />
                     <ContextMenuItem
-                      onClick={() => {
+                      onClick={async () => {
                         setActivePlaylist(pl.name);
-                        if (pl.tracks.length > 0) {
-                          loadQueue(pl.tracks);
+                        const tracks = await fetchTracksForPlaylist(pl.name);
+                        if (tracks.length > 0) {
+                          loadQueue(tracks);
                           play();
                         }
                       }}

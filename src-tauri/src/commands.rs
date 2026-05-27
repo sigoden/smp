@@ -1,5 +1,5 @@
 use crate::metadata::{read_metadata, TrackMetadata};
-use crate::playlist::{delete_playlist, load_playlists, save_playlist, Playlist};
+use crate::playlist::{delete_playlist, list_playlists, load_playlist_tracks, save_playlist, Playlist, TrackEntry};
 use crate::scanner::{collect_audio_files, scan_directory, FsEntry};
 use crate::settings::{load_settings, save_settings, AppSettings};
 use tauri::AppHandle;
@@ -44,7 +44,12 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
 
 #[command]
 pub fn get_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
-    load_playlists(&app)
+    list_playlists(&app)
+}
+
+#[command]
+pub fn get_playlist_tracks(app: AppHandle, name: String) -> Result<Vec<TrackEntry>, String> {
+    load_playlist_tracks(&app, &name)
 }
 
 #[command]

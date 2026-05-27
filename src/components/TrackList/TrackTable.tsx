@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../../stores/uiStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
-import { cn } from "../../lib/utils";
+import { cn, createQueuePlaylist } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
@@ -67,7 +67,8 @@ function TrackRow({
         ref={rowRef}
         className={cn(
           "grid items-center px-4 py-1.5 text-sm cursor-pointer border-b border-border/50 hover:bg-accent/30 transition-colors",
-          isPlaying && "bg-accent/40 text-accent-foreground hover:bg-accent/50"
+          isPlaying && "bg-accent/40 text-accent-foreground hover:bg-accent/50",
+          track.invalid && "opacity-50"
         )}
         style={{
           gridTemplateColumns: columns
@@ -107,8 +108,7 @@ export function TrackTable() {
   const [tagEditOpen, setTagEditOpen] = useState(false);
 
   const activePlaylist =
-    playlists.find((p) => p.name === activePlaylistName) ||
-    { name: QUEUE_PLAYLIST_NAME, tracks: [] };
+    playlists.find((p) => p.name === activePlaylistName) || createQueuePlaylist();
 
   const handleEditTags = (track: Track) => {
     setTagEditTrack(track);
