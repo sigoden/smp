@@ -46,6 +46,7 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 pub fn load_settings(app: &AppHandle) -> AppSettings {
+    log::info!("load_settings");
     let path = match settings_path(app) {
         Ok(p) => p,
         Err(e) => {
@@ -74,6 +75,7 @@ pub fn load_settings(app: &AppHandle) -> AppSettings {
 }
 
 pub fn save_settings(app: &AppHandle, settings: &AppSettings) -> Result<(), String> {
+    log::info!("save_settings");
     let path = settings_path(app)?;
     let content =
         serde_json::to_string_pretty(settings).map_err(|e| format!("Failed to serialize settings: {}", e))?;

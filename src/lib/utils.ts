@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { FsEntry, AppSettings, PlaylistData, Track, TrackMetadata } from "../types";
 import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME } from "./constants";
+import { logger } from "./logger";
 import { invoke } from "@tauri-apps/api/core";
 
 // ──── Tailwind helpers ────
@@ -54,7 +55,7 @@ export async function loadSettings(): Promise<AppSettings> {
   try {
     return await invoke<AppSettings>("load_settings");
   } catch (err) {
-    console.error("Failed to load settings:", err);
+    logger.warn("utils", "loadSettings failed, using defaults", err);
     return {
       root_dirs: [],
       expanded_paths: [],
@@ -74,7 +75,7 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
   try {
     await invoke("save_settings", { settings });
   } catch (err) {
-    console.error("Failed to save settings:", err);
+    logger.error("utils", "saveSettings failed", err);
   }
 }
 
@@ -92,7 +93,12 @@ export async function loadPlaylistTracks(name: string): Promise<Track[]> {
 
 /** Sync a playlist to disk (create or update) */
 export async function savePlaylist(playlist: PlaylistData): Promise<void> {
-  await invoke("save_playlist", { playlist });
+  try {
+    await invoke("save_playlist", { playlist });
+  } catch (err) {
+    logger.error("utils", "savePlaylist failed", err);
+    throw err;
+  }
 }
 
 /** Rename a playlist */
@@ -145,7 +151,7 @@ export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
       invalid: false,
     }));
   } catch (err) {
-    console.error("Failed to load directory:", err);
+    logger.error("utils", "loadTracksFromDir failed", err);
     return [];
   }
 };

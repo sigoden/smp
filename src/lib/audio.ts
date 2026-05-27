@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 let audioElement: HTMLAudioElement | null = null;
@@ -36,6 +37,7 @@ export function setCallbacks(cbs: AudioCallbacks) {
 }
 
 export function loadTrack(filePath: string) {
+  logger.info("audio", `loadTrack: ${filePath}`);
   const audio = getAudio();
   const src = convertFileSrc(filePath);
   audio.src = src;
@@ -45,7 +47,7 @@ export function loadTrack(filePath: string) {
 export function play() {
   const audio = getAudio();
   audio.play().catch((err) => {
-    console.error("Playback failed:", err);
+    logger.error("audio", "play failed", err);
   });
 }
 

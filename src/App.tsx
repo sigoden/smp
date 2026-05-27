@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
+import { logger } from "./lib/logger";
 import { DirectoryTreePanel } from "./components/Sidebar/DirectoryTreePanel";
 import { PlaylistPanel } from "./components/Sidebar/PlaylistPanel";
 import { ResizeHandle } from "./components/Sidebar/ResizeHandle";
@@ -77,50 +78,53 @@ function App() {
   // Load settings on mount
   useEffect(() => {
     const init = async () => {
-      const settings = await loadSettings();
+      try {
+        const settings = await loadSettings();
 
-      // Apply sidebar width — sync both Zustand and the CSS variable
-      useUIStore.setState({ sidebarWidth: settings.sidebar_width });
-      document.documentElement.style.setProperty("--sidebar-width", `${settings.sidebar_width}px`);
+        // Apply sidebar width — sync both Zustand and the CSS variable
+        useUIStore.setState({ sidebarWidth: settings.sidebar_width });
+        document.documentElement.style.setProperty("--sidebar-width", `${settings.sidebar_width}px`);
 
-      // Apply loaded settings to stores via setState to trigger proper reactivity
-      if (settings.root_dirs.length > 0) {
-        useLibraryStore.setState({ rootDirs: settings.root_dirs });
-        // Refresh tree data for root dirs
-        useLibraryStore.getState().refreshAll();
+        // Apply loaded settings to stores via setState to trigger proper reactivity
+        if (settings.root_dirs.length > 0) {
+          useLibraryStore.setState({ rootDirs: settings.root_dirs });
+          // Refresh tree data for root dirs
+          useLibraryStore.getState().refreshAll();
+        }
+
+        if (settings.expanded_paths.length > 0) {
+          useLibraryStore.setState({ expandedPaths: new Set(settings.expanded_paths) });
+        }
+
+        const playerStore = usePlayerStore.getState();
+        playerStore.setVolume(settings.volume);
+        playerStore.setPlayMode(settings.play_mode as PlayMode);
+
+        useUIStore.setState({
+          sidebarTab: settings.sidebar_tab as SidebarTab,
+          visibleColumns: settings.visible_columns as TrackColumn[],
+        });
+
+        const playlistsStore = usePlaylistStore.getState();
+
+        // Load playlists from disk (lightweight — no tracks yet)
+        await playlistsStore.loadPlaylists();
+
+        playlistsStore.setActivePlaylist(settings.active_playlist_name);
+
+        // Fetch tracks for the active playlist and load into queue
+        const activeName = playlistsStore.getActivePlaylist().name;
+        const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(activeName);
+        let startIndex: number | undefined;
+        if (settings.track_index >= 0 && settings.track_index < resolvedTracks.length) {
+          startIndex = settings.track_index;
+        } else if (resolvedTracks.length > 0) {
+          startIndex = 0;
+        }
+        playerStore.loadQueue(resolvedTracks, startIndex);
+      } catch (err) {
+        logger.error("app", "init failed", err);
       }
-
-      if (settings.expanded_paths.length > 0) {
-        useLibraryStore.setState({ expandedPaths: new Set(settings.expanded_paths) });
-      }
-
-      const playerStore = usePlayerStore.getState();
-      playerStore.setVolume(settings.volume);
-      playerStore.setPlayMode(settings.play_mode as PlayMode);
-
-      useUIStore.setState({
-        sidebarTab: settings.sidebar_tab as SidebarTab,
-        visibleColumns: settings.visible_columns as TrackColumn[],
-      });
-
-      const playlistsStore = usePlaylistStore.getState();
-
-      // Load playlists from disk (lightweight — no tracks yet)
-      await playlistsStore.loadPlaylists();
-
-      playlistsStore.setActivePlaylist(settings.active_playlist_name);
-
-      // Fetch tracks for the active playlist and load into queue
-      const activeName = playlistsStore.getActivePlaylist().name;
-      const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(activeName);
-      let startIndex: number | undefined;
-      if (settings.track_index >= 0 && settings.track_index < resolvedTracks.length) {
-        startIndex = settings.track_index;
-      } else if (resolvedTracks.length > 0) {
-        startIndex = 0;
-      }
-      playerStore.loadQueue(resolvedTracks, startIndex);
-
     };
 
     init();

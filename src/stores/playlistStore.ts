@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Track, PlaylistData } from "../types";
+import { logger } from "../lib/logger";
 import { listPlaylists, loadPlaylistTracks, savePlaylist, renamePlaylist, deletePlaylist } from "../lib/utils";
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
 import { useUIStore } from "./uiStore";
@@ -39,7 +40,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
         isDirty: false,
       });
     } catch (err) {
-      console.error("Failed to load playlists:", err);
+      logger.error("playlist", "loadPlaylists failed", err);
     }
   },
 
@@ -57,7 +58,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       await savePlaylist({ name, tracks });
       return tracks;
     } catch (err) {
-      console.error(`Failed to fetch tracks for playlist "${name}":`, err);
+      logger.error("playlist", `fetchTracksForPlaylist failed: ${name}`, err);
       return [];
     } finally {
       useUIStore.getState().setLoading(false);
@@ -68,7 +69,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     try {
       const { playlists } = get();
       if (playlists.some((p) => p.name === name)) {
-        console.error("Playlist with this name already exists");
+        logger.warn("playlist", `createPlaylist: "${name}" already exists`);
         return;
       }
       await savePlaylist({ name, tracks: [] });
@@ -78,7 +79,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
         activePlaylistName: name,
       }));
     } catch (err) {
-      console.error("Failed to create playlist:", err);
+      logger.error("playlist", "createPlaylist failed", err);
     }
   },
 
@@ -88,7 +89,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     if (!playlist) return;
 
     if (playlists.some((p) => p.name === newName && p.name !== oldName)) {
-      console.error("Playlist with this name already exists");
+      logger.warn("playlist", `renamePlaylist: "${newName}" already exists`);
       return;
     }
 
@@ -103,7 +104,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
           state.activePlaylistName === oldName ? newName : state.activePlaylistName,
       }));
     } catch (err) {
-      console.error("Failed to rename playlist:", err);
+      logger.error("playlist", "renamePlaylist failed", err);
     }
   },
 
@@ -117,7 +118,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
           activePlaylistName === name ? QUEUE_PLAYLIST_NAME : activePlaylistName,
       });
     } catch (err) {
-      console.error("Failed to delete playlist:", err);
+      logger.error("playlist", "deletePlaylist failed", err);
     }
   },
 
@@ -184,14 +185,14 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
         return updates;
       });
     } catch (err) {
-      console.error("Failed to save playlist:", err);
+      logger.error("playlist", "savePlaylist failed", err);
     }
   },
 
   saveQueueAsNewPlaylist: async (name: string, tracks: Track[]) => {
     const { savePlaylist, setActivePlaylist, playlists } = get();
     if (playlists.some((p) => p.name === name)) {
-      console.error("Playlist already exists:", name);
+      logger.warn("playlist", `saveQueueAsNewPlaylist: "${name}" already exists`);
       return;
     }
     const playlist: PlaylistData = { name, tracks };

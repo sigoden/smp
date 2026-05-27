@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { FsEntry } from "../types";
+import { logger } from "../lib/logger";
 import { scanDirectory } from "../lib/utils";
 
 interface LibraryState {
@@ -82,7 +83,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
         set({ treeData: updateChildren(treeData) });
       }
     } catch (err) {
-      console.error("Failed to scan directory:", err);
+      logger.error("library", `refreshDir failed: ${path ?? 'unknown'}`, err);
     }
   },
 
@@ -97,7 +98,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       const entries: FsEntry[] = await scanDirectory(firstDir);
       set({ treeData: entries });
     } catch (err) {
-      console.error("Failed to scan directory:", err);
+      logger.error("library", "refreshAll failed", err);
     }
   },
 }));
