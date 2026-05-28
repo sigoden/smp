@@ -15,6 +15,7 @@ import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
+import { ConfirmDialog } from "../ui/confirm-dialog";
 import { PlaylistNameDialog } from "../ui/playlist-name-dialog";
 
 export function PlaylistPanel() {
@@ -32,6 +33,7 @@ export function PlaylistPanel() {
   const [newName, setNewName] = useState("");
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleCreate = async () => {
     const name = newName.trim();
@@ -179,7 +181,7 @@ export function PlaylistPanel() {
                     </ContextMenuItem>
                     <ContextSeparator />
                     <ContextMenuItem
-                      onClick={() => deletePlaylist(pl.name)}
+                      onClick={() => setDeleteTarget(pl.name)}
                       danger
                     >
                       <Trash2 className="mr-2 h-3.5 w-3.5" />
@@ -194,6 +196,7 @@ export function PlaylistPanel() {
       </div>
 
       <PlaylistNameDialog
+        key={`rename-${renameDialogOpen}-${renameTarget ?? ""}`}
         open={renameDialogOpen}
         onOpenChange={(open) => {
           setRenameDialogOpen(open);
@@ -204,6 +207,20 @@ export function PlaylistPanel() {
         confirmLabel="Rename"
         validate={renameValidator}
         onSubmit={handleRenameSubmit}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+        title="Delete Playlist"
+        description={`Are you sure you want to delete the playlist "${deleteTarget}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (deleteTarget) {
+            deletePlaylist(deleteTarget);
+            setDeleteTarget(null);
+          }
+        }}
       />
     </div>
   );

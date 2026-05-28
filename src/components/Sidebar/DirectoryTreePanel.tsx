@@ -11,6 +11,7 @@ import { cn, getTrack, loadTracksFromDir, openContainerFolder, revealInFileManag
 import type { FsEntry } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
+import { ConfirmDialog } from "../ui/confirm-dialog";
 
 function TreeNode({
   entry,
@@ -204,6 +205,8 @@ export function DirectoryTreePanel() {
     }
   };
 
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await refreshAll();
@@ -279,7 +282,7 @@ export function DirectoryTreePanel() {
               >
                 <span className="truncate text-muted-foreground">{dir}</span>
                 <button
-                  onClick={() => removeRootDir(dir)}
+                  onClick={() => setRemoveTarget(dir)}
                   className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive shrink-0"
                   title="Remove directory"
                 >
@@ -303,6 +306,24 @@ export function DirectoryTreePanel() {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!removeTarget}
+        onOpenChange={() => setRemoveTarget(null)}
+        title="Remove Directory"
+        description="Are you sure you want to remove this directory from the library? Files on disk will not be affected."
+        confirmLabel="Remove"
+        onConfirm={() => {
+          if (removeTarget) {
+            removeRootDir(removeTarget);
+            setRemoveTarget(null);
+          }
+        }}
+      >
+        <div className="text-sm text-muted-foreground bg-muted rounded px-3 py-2 truncate mb-4">
+          {removeTarget}
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }
