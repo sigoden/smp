@@ -121,13 +121,6 @@ export async function openPlaylistsDir(): Promise<void> {
   await invoke("open_playlists_dir");
 }
 
-// ──── Tags ────
-
-/** Write ID3 tags to an audio file */
-export async function writeMetadata(path: string, title: string, artist: string, album: string): Promise<void> {
-  await invoke("write_metadata", { path, title, artist, album });
-}
-
 // ─────────────────────────────────────────────
 //  Higher-level utilities (use wrappers above)
 // ─────────────────────────────────────────────

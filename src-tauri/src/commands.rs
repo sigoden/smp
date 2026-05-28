@@ -181,21 +181,3 @@ pub fn open_playlists_dir(app: AppHandle) -> Result<(), String> {
         format!("open_playlists_dir"),
     )
 }
-
-#[command]
-pub fn write_metadata(
-    path: String,
-    title: Option<String>,
-    artist: Option<String>,
-    album: Option<String>,
-) -> Result<(), String> {
-    log_cmd_err(
-        crate::metadata::write_metadata(
-            &path,
-            title.as_deref(),
-            artist.as_deref(),
-            album.as_deref(),
-        ),
-        format!("write_metadata({path})"),
-    )
-}

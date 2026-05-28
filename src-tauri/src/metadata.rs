@@ -1,7 +1,6 @@
-use lofty::config::WriteOptions;
 use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::read_from_path;
-use lofty::tag::{Accessor, ItemKey, TagExt, TagType};
+use lofty::tag::{Accessor, ItemKey, TagExt};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -76,48 +75,3 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
     })
 }
 
-pub fn write_metadata(
-    file_path: &str,
-    title: Option<&str>,
-    artist: Option<&str>,
-    album: Option<&str>,
-) -> Result<(), String> {
-    let path = Path::new(file_path);
-    let mut tagged_file =
-        read_from_path(path).map_err(|e| format!("Failed to read file for writing: {}", e))?;
-
-    // Get existing primary tag, or create a new one based on file type
-    let tag = if let Some(t) = tagged_file.primary_tag_mut() {
-        t
-    } else {
-        // Determine the appropriate tag type for this file format
-        let tag_type = match tagged_file.file_type() {
-            lofty::file::FileType::Mpeg => TagType::Id3v2,
-            lofty::file::FileType::Flac | lofty::file::FileType::Vorbis => TagType::VorbisComments,
-            lofty::file::FileType::Ape => TagType::Ape,
-            lofty::file::FileType::Mp4 => TagType::Mp4Ilst,
-            _ => TagType::Id3v2, // Safe default for most audio files
-        };
-
-        tagged_file.insert_tag(lofty::tag::Tag::new(tag_type));
-        tagged_file
-            .primary_tag_mut()
-            .ok_or_else(|| "Failed to create primary tag".to_string())?
-    };
-
-    if let Some(t) = title {
-        tag.set_title(t.into());
-    }
-    if let Some(a) = artist {
-        tag.set_artist(a.into());
-    }
-    if let Some(a) = album {
-        tag.set_album(a.into());
-    }
-
-    tagged_file
-        .save_to_path(path, WriteOptions::default())
-        .map_err(|e| format!("Failed to save metadata: {}", e))?;
-
-    Ok(())
-}

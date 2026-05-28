@@ -16,7 +16,6 @@ Built with Tauri 2 · React 19 · TypeScript
 - **Playlist management** — Create, rename, delete playlists. M3U8 format for easy portability.
 - **Queue system** — Replace or append tracks to the queue from any context.
 - **Play modes** — Sequential, Repeat One, and Shuffle (no consecutive repeats).
-- **Tag display & editing** — View and edit title, artist, and album metadata.
 - **Customizable columns** — Choose which columns to show in the track table.
 - **Settings persistence** — Volume, play mode, window layout, and active playlist are saved across sessions.
 - **System tray** — Minimize to tray, control playback from the tray menu, and surface the window with a click.

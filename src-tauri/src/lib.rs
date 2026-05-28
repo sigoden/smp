@@ -153,7 +153,6 @@ pub fn run() {
             commands::rename_playlist,
             commands::open_in_explorer,
             commands::open_playlists_dir,
-            commands::write_metadata,
             commands::load_settings,
             commands::save_settings,
         ])

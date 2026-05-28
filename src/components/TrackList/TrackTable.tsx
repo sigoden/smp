@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useUIStore } from "../../stores/uiStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
@@ -11,7 +11,6 @@ import {
   trackDuration,
 } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
-import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
 import { DEFAULT_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
@@ -39,13 +38,11 @@ function TrackRow({
   index,
   isPlaying,
   columns,
-  onEditTags,
 }: {
   track: Track;
   index: number;
   isPlaying: boolean;
   columns: TrackColumn[];
-  onEditTags?: (track: Track) => void;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const playTrack = usePlayerStore((s) => s.playTrack);
@@ -76,7 +73,6 @@ function TrackRow({
     <TrackContextMenu
       track={track}
       trackIndex={index}
-      onEditTags={onEditTags ? () => onEditTags(track) : undefined}
     >
       <div
         ref={rowRef}
@@ -119,16 +115,8 @@ export function TrackTable() {
   const playlists = usePlaylistStore((s) => s.playlists);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
 
-  const [tagEditTrack, setTagEditTrack] = useState<Track | null>(null);
-  const [tagEditOpen, setTagEditOpen] = useState(false);
-
   const activePlaylist =
     playlists.find((p) => p.name === activePlaylistName) || createQueuePlaylist();
-
-  const handleEditTags = (track: Track) => {
-    setTagEditTrack(track);
-    setTagEditOpen(true);
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -170,18 +158,11 @@ export function TrackTable() {
                 track.path === nowPlaying?.path && currentIndex === index
               }
               columns={orderedColumns}
-              onEditTags={handleEditTags}
             />
           ))
         )}
       </div>
 
-      {/* Tag Edit Dialog */}
-      <TagEditDialog
-        open={tagEditOpen}
-        onOpenChange={setTagEditOpen}
-        track={tagEditTrack}
-      />
     </div>
   );
 }
