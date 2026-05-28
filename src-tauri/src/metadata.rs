@@ -1,31 +1,21 @@
 use lofty::config::WriteOptions;
 use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::read_from_path;
-use lofty::tag::{Accessor, TagExt, TagType};
-use serde::Serialize;
+use lofty::tag::{Accessor, ItemKey, TagExt, TagType};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TrackMetadata {
-    pub path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album: Option<String>,
-    pub duration: Option<f64>,
-    pub track_number: Option<u32>,
-}
-
-impl TrackMetadata {
-    pub fn minimal(file_path: &str) -> Self {
-        Self {
-            path: file_path.to_string(),
-            title: None,
-            artist: None,
-            album: None,
-            duration: None,
-            track_number: None,
-        }
-    }
+    pub duration_ms: Option<u32>,
+    pub track_number: Option<String>,
+    pub genre: Option<String>,
+    pub album_artist: Option<String>,
+    pub year: Option<usize>,
 }
 
 pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
@@ -35,20 +25,20 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
         Ok(f) => f,
         Err(e) => {
             log::warn!(
-                "read_metadata_lofty: Failed to parse '{}': {}. Returning minimal metadata.",
+                "read_metadata_lofty: Failed to parse '{}': {}. Returning default metadata.",
                 file_path,
                 e
             );
-            return Ok(TrackMetadata::minimal(file_path));
+            return Ok(TrackMetadata::default());
         }
     };
 
-    let duration = {
+    let duration_ms = {
         let dur = tagged_file.properties().duration();
         if dur.is_zero() {
             None
         } else {
-            Some(dur.as_secs_f64())
+            Some(dur.as_millis() as u32)
         }
     };
 
@@ -60,24 +50,29 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
         .filter(|t| !t.is_empty())
         .or_else(|| tagged_file.first_tag());
 
-    let (title, artist, album, track_number) = tag
+    let (title, artist, album, track_number, genre, album_artist, year) = tag
         .map(|t| {
             (
                 t.title().map(|s| s.to_string()),
                 t.artist().map(|s| s.to_string()),
                 t.album().map(|s| s.to_string()),
-                t.track(),
+                t.track().map(|n| n.to_string()),
+                t.genre().map(|s| s.to_string()),
+                t.get_string(ItemKey::AlbumArtist).map(|s| s.to_string()),
+                t.date().map(|ts| ts.year as usize),
             )
         })
         .unwrap_or_default();
 
     Ok(TrackMetadata {
-        path: file_path.to_string(),
         title,
         artist,
         album,
-        duration,
+        duration_ms,
         track_number,
+        genre,
+        album_artist,
+        year,
     })
 }
 

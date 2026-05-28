@@ -125,7 +125,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentIndex: targetIndex,
       nowPlaying: targetTrack,
       position: 0,
-      duration: targetTrack.duration,
+      duration: targetTrack.duration_ms / 1000,
       playing: true,
     });
     audio.play();
@@ -157,7 +157,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentIndex: nextIdx,
       nowPlaying: track,
       position: 0,
-      duration: track.duration,
+      duration: track.duration_ms / 1000,
       playing: true,
     });
     audio.play();
@@ -183,7 +183,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentIndex: prevIdx,
       nowPlaying: track,
       position: 0,
-      duration: track.duration,
+      duration: track.duration_ms / 1000,
       playing: true,
     });
     audio.play();

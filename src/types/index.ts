@@ -5,21 +5,21 @@ export type FsEntry =
 
 /** Track metadata from Rust backend */
 export interface TrackMetadata {
-  path: string;
-  title: string | null;
+  title?: string;
   artist: string | null;
   album: string | null;
-  duration: number;
-  track_number: number | null;
+  duration_ms: number | null;
+  track_number: string | null;
+  genre: string | null;
+  album_artist: string | null;
+  year: number | null;
 }
 
 /** A track in the queue/playlist */
 export interface Track {
   path: string;
-  title: string;
-  artist: string;
-  album: string;
-  duration: number;
+  metadata: TrackMetadata;
+  duration_ms: number;
   invalid: boolean;
 }
 
@@ -30,7 +30,16 @@ export type PlayMode = "sequential" | "repeat-one" | "shuffle";
 export type SidebarTab = "tree" | "playlist";
 
 /** Visible columns in the track table */
-export type TrackColumn = "artist" | "title" | "album" | "filename" | "duration";
+export type TrackColumn =
+  "filename"
+  | "title"
+  | "artist"
+  | "album"
+  | "album_artist"
+  | "track_number"
+  | "genre"
+  | "year"
+  | "duration";
 
 /** Playlist from Rust backend */
 export interface PlaylistData {

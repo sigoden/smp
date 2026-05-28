@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { FsEntry, AppSettings, PlaylistData, Track, TrackMetadata } from "../types";
-import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME } from "./constants";
+import { DEFAULT_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME } from "./constants";
 import { logger } from "./logger";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -38,6 +38,11 @@ export async function collectAudioFiles(path: string): Promise<string[]> {
   return await invoke("collect_audio_files", { path });
 }
 
+/** Read metadata for a single audio file */
+export async function readMetadata(path: string): Promise<TrackMetadata> {
+  return await invoke("read_metadata", { path });
+}
+
 /** Fetch metadata for multiple audio files */
 export async function getMetadataBatch(paths: string[]): Promise<TrackMetadata[]> {
   return await invoke("get_metadata_batch", { paths });
@@ -61,7 +66,7 @@ export async function loadSettings(): Promise<AppSettings> {
       expanded_paths: [],
       volume: 0.8,
       play_mode: "sequential",
-      visible_columns: ALL_TRACK_COLUMNS,
+      visible_columns: DEFAULT_TRACK_COLUMNS,
       sidebar_tab: "tree",
       active_playlist_name: QUEUE_PLAYLIST_NAME,
       sidebar_width: 256,
@@ -142,7 +147,7 @@ export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
     const files: string[] = await collectAudioFiles(dirPath);
     if (files.length === 0) return [];
     const metadata: TrackMetadata[] = await getMetadataBatch(files);
-    return metadata.map((m) => mapMetadataToTrack(m));
+    return files.map((path, i) => mapMetadataToTrack(path, metadata[i]));
   } catch (err) {
     logger.error("utils", "loadTracksFromDir failed", err);
     return [];
@@ -151,34 +156,48 @@ export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
 
 /** Load a single track's metadata and return a Track object */
 export async function getTrack(path: string): Promise<Track> {
-  let track: Track = {
-    path,
-    title: "",
-    artist: "",
-    album: "",
-    duration: 0,
-    invalid: true,
-  };
+  let metadata: TrackMetadata | undefined;
   try {
-    const metadatas = await getMetadataBatch([path]);
-    if (metadatas.length > 0) {
-      const metadata = metadatas[0];
-      track = mapMetadataToTrack(metadata);
-    }
+    metadata = await readMetadata(path);
   } catch (err) {
     logger.error("DirectoryTreePanel", `Failed to load metadata for '${path}'`, err);
   }
-  return track
+  return mapMetadataToTrack(path, metadata);
 }
 
 /** Map TrackMetadata to Track */
-export function mapMetadataToTrack(metadata: TrackMetadata): Track {
+export function mapMetadataToTrack(
+  path: string,
+  metadata?: TrackMetadata,
+): Track {
   return {
-    path: metadata.path,
-    title: metadata.title ?? "",
-    artist: metadata.artist ?? "",
-    album: metadata.album ?? "",
-    duration: metadata.duration ?? 0,
-    invalid: false,
+    path,
+    metadata: metadata ?? {
+      title: undefined,
+      artist: null,
+      album: null,
+      duration_ms: null,
+      track_number: null,
+      genre: null,
+      album_artist: null,
+      year: null,
+    },
+    duration_ms: metadata?.duration_ms ?? 0,
+    invalid: !metadata,
   }
 }
+
+/** Convenience accessors for Track (flatten metadata fields) */
+export function trackTitle(track: Track): string {
+  return track.metadata.title ?? track.path.split(/[/\\]/).pop() ?? "??";
+}
+export function trackArtist(track: Track): string {
+  return track.metadata.artist ?? "";
+}
+export function trackAlbum(track: Track): string {
+  return track.metadata.album ?? "";
+}
+export function trackDuration(track: Track): number {
+  return track.duration_ms / 1000;
+}
+

@@ -2,18 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { useUIStore } from "../../stores/uiStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
-import { cn, createQueuePlaylist } from "../../lib/utils";
+import {
+  cn,
+  createQueuePlaylist,
+  trackTitle,
+  trackArtist,
+  trackAlbum,
+  trackDuration,
+} from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import { TagEditDialog } from "./TagEditDialog";
 import type { Track, TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { DEFAULT_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
+  filename: "minmax(180px, 1.5fr)",
   title: "minmax(180px, 1fr)",
   artist: "minmax(140px, 1fr)",
   album: "minmax(140px, 1fr)",
-  filename: "minmax(180px, 1.5fr)",
   duration: "minmax(60px, 80px)",
+  track_number: "minmax(40px, 60px)",
+  genre: "minmax(100px, 1fr)",
+  album_artist: "minmax(140px, 1fr)",
+  year: "minmax(50px, 70px)",
 };
 
 function formatDuration(seconds: number): string {
@@ -50,11 +61,15 @@ function TrackRow({
   };
 
   const cellValues: Record<TrackColumn, string> = {
-    title: track.title,
-    artist: track.artist,
-    album: track.album,
     filename: track.path.split(/[/\\]/).pop() || track.path,
-    duration: formatDuration(track.duration),
+    title: trackTitle(track),
+    artist: trackArtist(track),
+    album: trackAlbum(track),
+    duration: formatDuration(trackDuration(track)),
+    track_number: track.metadata.track_number ?? "",
+    genre: track.metadata.genre ?? "",
+    album_artist: track.metadata.album_artist ?? "",
+    year: track.metadata.year?.toString() ?? "",
   };
 
   return (
@@ -97,7 +112,7 @@ function TrackRow({
 export function TrackTable() {
   const visibleColumns = useUIStore((s) => s.visibleColumns);
   // Always render columns in the fixed order defined by ALL_TRACK_COLUMNS
-  const orderedColumns = ALL_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
+  const orderedColumns = DEFAULT_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
   const tracks = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);

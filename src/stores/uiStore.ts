@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { SidebarTab, TrackColumn } from "../types";
-import { ALL_TRACK_COLUMNS } from "../lib/constants";
+import { DEFAULT_TRACK_COLUMNS } from "../lib/constants";
 
 interface UIState {
   sidebarTab: SidebarTab;
@@ -17,7 +17,7 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarTab: "tree",
-  visibleColumns: ALL_TRACK_COLUMNS,
+  visibleColumns: DEFAULT_TRACK_COLUMNS,
   sidebarWidth: 256,
   isLoading: false,
 
@@ -38,3 +38,4 @@ export const useUIStore = create<UIState>((set) => ({
       return { visibleColumns: [...state.visibleColumns, column] };
     }),
 }));
+

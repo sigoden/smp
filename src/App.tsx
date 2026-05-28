@@ -15,7 +15,7 @@ import { usePlayerStore } from "./stores/playerStore";
 import { usePlaylistStore } from "./stores/playlistStore";
 import { useLibraryStore } from "./stores/libraryStore";
 import { setCallbacks } from "./lib/audio";
-import { loadSettings, saveSettings } from "./lib/utils";
+import { loadSettings, saveSettings, trackTitle, trackArtist } from "./lib/utils";
 import type { PlayMode, SidebarTab, TrackColumn } from "./types";
 
 function App() {
@@ -191,7 +191,7 @@ function App() {
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
   useEffect(() => {
     if (nowPlaying) {
-      const text = `${nowPlaying.title ?? ""} - ${nowPlaying.artist ?? ""}`;
+      const text = `${trackTitle(nowPlaying)} — ${trackArtist(nowPlaying)}`;
       emit("update-tray-tooltip", text);
     } else {
       emit("update-tray-tooltip", "Music Player");

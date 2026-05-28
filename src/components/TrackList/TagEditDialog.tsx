@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { writeMetadata } from "../../lib/utils";
+import { writeMetadata, trackTitle, trackArtist, trackAlbum } from "../../lib/utils";
 import type { Track } from "../../types";
 
 interface TagEditDialogProps {
@@ -17,9 +17,9 @@ interface TagEditDialogProps {
 }
 
 export function TagEditDialog({ open, onOpenChange, track }: TagEditDialogProps) {
-  const [title, setTitle] = useState(() => track?.title ?? "");
-  const [artist, setArtist] = useState(() => track?.artist ?? "");
-  const [album, setAlbum] = useState(() => track?.album ?? "");
+  const [title, setTitle] = useState(() => (track ? trackTitle(track) : ""));
+  const [artist, setArtist] = useState(() => (track ? trackArtist(track) : ""));
+  const [album, setAlbum] = useState(() => (track ? trackAlbum(track) : ""));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

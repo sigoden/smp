@@ -43,7 +43,7 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
                     path,
                     e
                 );
-                results.push(TrackMetadata::minimal(&path));
+                results.push(TrackMetadata::default());
             }
         }
     }

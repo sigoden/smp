@@ -1,4 +1,5 @@
 import { usePlayerStore } from "../../stores/playerStore";
+import { trackTitle, trackArtist, trackAlbum } from "../../lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -16,8 +17,8 @@ export function NowPlayingInfo() {
     );
   }
 
-  const title = nowPlaying.title || nowPlaying.path.split(/[/\\]/).pop() || "??";
-  const subtitle = [nowPlaying.artist, nowPlaying.album].filter(Boolean).join(" — ");
+  const title = trackTitle(nowPlaying);
+  const subtitle = [trackArtist(nowPlaying), trackAlbum(nowPlaying)].filter(Boolean).join(" — ");
 
   return (
     <div className="min-w-0 w-full">

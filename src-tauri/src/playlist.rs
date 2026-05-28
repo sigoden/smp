@@ -1,3 +1,4 @@
+use crate::metadata::TrackMetadata;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -7,10 +8,8 @@ use tauri::Manager;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrackEntry {
     pub path: String,
-    pub title: Option<String>,
-    pub artist: Option<String>,
-    pub album: Option<String>,
-    pub duration: f64,
+    pub metadata: TrackMetadata,
+    pub duration_ms: u32,
     #[serde(default)]
     pub invalid: bool,
 }
@@ -33,7 +32,7 @@ pub fn playlists_dir(app: &AppHandle) -> Result<PathBuf, String> {
 fn playlist_to_m3u8(playlist: &Playlist) -> String {
     let mut output = String::from("#EXTM3U\n");
     for track in &playlist.tracks {
-        let title_str = match (&track.artist, &track.title) {
+        let title_str = match (&track.metadata.artist, &track.metadata.title) {
             (Some(a), Some(t)) => format!("{} - {}", a, t),
             (Some(a), None) => a.clone(),
             (None, Some(t)) => t.clone(),
@@ -43,7 +42,8 @@ fn playlist_to_m3u8(playlist: &Playlist) -> String {
                 .unwrap_or("Unknown")
                 .to_string(),
         };
-        output.push_str(&format!("#EXTINF:{},{}\n", track.duration, title_str));
+        let dur_secs = track.duration_ms / 1000;
+        output.push_str(&format!("#EXTINF:{},{}\n", dur_secs, title_str));
         output.push_str(&format!("{}\n", track.path));
     }
     output
@@ -83,10 +83,17 @@ fn m3u8_to_playlist(name: &str, content: &str) -> Playlist {
         };
         tracks.push(TrackEntry {
             path,
-            title,
-            artist,
-            album: None,
-            duration,
+            metadata: TrackMetadata {
+                title,
+                artist,
+                album: None,
+                duration_ms: None,
+                track_number: None,
+                genre: None,
+                album_artist: None,
+                year: None,
+            },
+            duration_ms: (duration * 1000.0) as u32,
             invalid: false,
         });
         current_extinf = None;
@@ -181,20 +188,17 @@ pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntr
         if !std::path::Path::new(&track.path).exists() {
             track.invalid = true;
         } else {
-            // File exists — re-read duration from actual audio metadata
-            // Note: title/artist/album trust m3u8 inline metadata per scope
+            // File exists — re-read metadata from actual audio
             match crate::metadata::read_metadata(&track.path) {
                 Ok(meta) => {
-                    track.title = meta.title;
-                    track.artist = meta.artist;
-                    track.album = meta.album;
-                    if let Some(dur) = meta.duration {
-                        track.duration = dur;
+                    track.metadata = meta;
+                    if let Some(ms) = track.metadata.duration_ms {
+                        track.duration_ms = ms;
                     }
                 }
                 Err(e) => {
                     log::warn!("Failed to read metadata for {}: {}", track.path, e);
-                    // Keep EXTINF duration as fallback
+                    // Keep EXTINF metadata as fallback
                 }
             }
         }
