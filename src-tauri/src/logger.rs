@@ -16,21 +16,8 @@ pub struct LogEntry {
 pub fn retrieve_log_level() -> LevelFilter {
     std::env::var("SMP_LOG_LEVEL")
         .ok()
-        .and_then(|level| match level.to_lowercase().as_str() {
-            "trace" => Some(LevelFilter::Trace),
-            "debug" => Some(LevelFilter::Debug),
-            "info" => Some(LevelFilter::Info),
-            "warn" => Some(LevelFilter::Warn),
-            "error" => Some(LevelFilter::Error),
-            _ => None,
-        })
-        .unwrap_or_else(|| {
-            if cfg!(debug_assertions) {
-                LevelFilter::Debug
-            } else {
-                LevelFilter::Info
-            }
-        })
+        .and_then(|level| parse_level_filter(&level))
+        .unwrap_or(LevelFilter::Info)
 }
 
 /// Convert a string level ("ERROR", "WARN", "INFO", "DEBUG", "TRACE") to `LevelFilter`.

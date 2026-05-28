@@ -26,12 +26,15 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(logger::retrieve_log_level())
-                .targets([
-                    Target::new(TargetKind::Stdout),
-                    Target::new(TargetKind::LogDir {
+                .targets({
+                    let mut targets = vec![];
+                    #[cfg(debug_assertions)]
+                    targets.push(Target::new(TargetKind::Stdout));
+                    targets.push(Target::new(TargetKind::LogDir {
                         file_name: Some("app".into()),
-                    }),
-                ])
+                    }));
+                    targets
+                })
                 .format(|out, message, record| {
                     out.finish(format_args!(
                         "{} {} [{}] {}",
