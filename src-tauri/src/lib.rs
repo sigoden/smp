@@ -26,6 +26,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(logger::retrieve_log_level())
+                .filter(|metadata| metadata.target().starts_with("app_lib"))
                 .targets({
                     let mut targets = vec![];
                     #[cfg(debug_assertions)]
