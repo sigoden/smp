@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "identifier": "com.sigoden.SimpleMusicPlayer",
   "build": {
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420"
   },
