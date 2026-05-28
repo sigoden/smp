@@ -185,7 +185,12 @@ pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntr
             // Note: title/artist/album trust m3u8 inline metadata per scope
             match crate::metadata::read_metadata(&track.path) {
                 Ok(meta) => {
-                    track.duration = meta.duration;
+                    track.title = meta.title;
+                    track.artist = meta.artist;
+                    track.album = meta.album;
+                    if let Some(dur) = meta.duration {
+                        track.duration = dur;
+                    }
                 }
                 Err(e) => {
                     log::warn!("Failed to read metadata for {}: {}", track.path, e);

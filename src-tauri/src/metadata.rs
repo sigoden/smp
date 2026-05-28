@@ -1,7 +1,7 @@
-use lofty::file::AudioFile;
-use lofty::file::TaggedFileExt;
+use lofty::config::WriteOptions;
+use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::read_from_path;
-use lofty::tag::Accessor;
+use lofty::tag::{Accessor, TagExt, TagType};
 use serde::Serialize;
 use std::path::Path;
 
@@ -11,44 +11,65 @@ pub struct TrackMetadata {
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album: Option<String>,
-    pub duration: f64,
+    pub duration: Option<f64>,
     pub track_number: Option<u32>,
+}
+
+impl TrackMetadata {
+    pub fn minimal(file_path: &str) -> Self {
+        Self {
+            path: file_path.to_string(),
+            title: None,
+            artist: None,
+            album: None,
+            duration: None,
+            track_number: None,
+        }
+    }
 }
 
 pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
     let path = Path::new(file_path);
 
-    let file = match read_from_path(path) {
+    let tagged_file = match read_from_path(path) {
         Ok(f) => f,
-        Err(_) => {
+        Err(e) => {
             log::warn!(
-                "read_metadata: {} parse failed, returning minimal metadata",
-                file_path
+                "read_metadata_lofty: Failed to parse '{}': {}. Returning minimal metadata.",
+                file_path,
+                e
             );
-            return Ok(TrackMetadata {
-                path: file_path.to_string(),
-                title: None,
-                artist: None,
-                album: None,
-                duration: 0.0,
-                track_number: None,
-            });
+            return Ok(TrackMetadata::minimal(file_path));
         }
     };
 
-    let properties = file.properties();
-    let duration = properties.duration().as_secs_f64();
+    let duration = {
+        let dur = tagged_file.properties().duration();
+        if dur.is_zero() {
+            None
+        } else {
+            Some(dur.as_secs_f64())
+        }
+    };
 
-    let tags = file.tags().first().map(|t| {
-        (
-            t.title().map(|s| s.to_string()),
-            t.artist().map(|s| s.to_string()),
-            t.album().map(|s| s.to_string()),
-            t.track(),
-        )
-    });
+    // Improved tag retrieval algorithm:
+    // 1. Try primary_tag (format-specific best choice, e.g., ID3v2 for MP3)
+    // 2. Fallback to first_tag if primary is missing or empty
+    let tag = tagged_file
+        .primary_tag()
+        .filter(|t| !t.is_empty())
+        .or_else(|| tagged_file.first_tag());
 
-    let (title, artist, album, track_number) = tags.unwrap_or_default();
+    let (title, artist, album, track_number) = tag
+        .map(|t| {
+            (
+                t.title().map(|s| s.to_string()),
+                t.artist().map(|s| s.to_string()),
+                t.album().map(|s| s.to_string()),
+                t.track(),
+            )
+        })
+        .unwrap_or_default();
 
     Ok(TrackMetadata {
         path: file_path.to_string(),
@@ -66,36 +87,42 @@ pub fn write_metadata(
     artist: Option<&str>,
     album: Option<&str>,
 ) -> Result<(), String> {
-    use lofty::config::WriteOptions;
-    use lofty::file::TaggedFileExt;
-
-    let path = std::path::Path::new(file_path);
+    let path = Path::new(file_path);
     let mut tagged_file =
-        read_from_path(path).map_err(|e| format!("Failed to read file: {}", e))?;
+        read_from_path(path).map_err(|e| format!("Failed to read file for writing: {}", e))?;
 
-    let tag = if tagged_file.contains_tag_type(lofty::tag::TagType::Id3v2) {
-        tagged_file.tag_mut(lofty::tag::TagType::Id3v2)
+    // Get existing primary tag, or create a new one based on file type
+    let tag = if let Some(t) = tagged_file.primary_tag_mut() {
+        t
     } else {
-        tagged_file.primary_tag_mut()
+        // Determine the appropriate tag type for this file format
+        let tag_type = match tagged_file.file_type() {
+            lofty::file::FileType::Mpeg => TagType::Id3v2,
+            lofty::file::FileType::Flac | lofty::file::FileType::Vorbis => TagType::VorbisComments,
+            lofty::file::FileType::Ape => TagType::Ape,
+            lofty::file::FileType::Mp4 => TagType::Mp4Ilst,
+            _ => TagType::Id3v2, // Safe default for most audio files
+        };
+
+        tagged_file.insert_tag(lofty::tag::Tag::new(tag_type));
+        tagged_file
+            .primary_tag_mut()
+            .ok_or_else(|| "Failed to create primary tag".to_string())?
     };
 
-    if let Some(tag) = tag {
-        if let Some(t) = title {
-            tag.set_title(t.into());
-        }
-        if let Some(a) = artist {
-            tag.set_artist(a.into());
-        }
-        if let Some(a) = album {
-            tag.set_album(a.into());
-        }
-
-        tagged_file
-            .save_to_path(path, WriteOptions::default())
-            .map_err(|e| format!("Failed to save file: {}", e))?;
-    } else {
-        return Err("No tag found or could not create one".to_string());
+    if let Some(t) = title {
+        tag.set_title(t.into());
     }
+    if let Some(a) = artist {
+        tag.set_artist(a.into());
+    }
+    if let Some(a) = album {
+        tag.set_album(a.into());
+    }
+
+    tagged_file
+        .save_to_path(path, WriteOptions::default())
+        .map_err(|e| format!("Failed to save metadata: {}", e))?;
 
     Ok(())
 }

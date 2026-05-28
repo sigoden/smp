@@ -25,7 +25,7 @@ tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
 walkdir = "2"
-lofty = "0.22"
+lofty = "0.24.0"
 
 image = { version = "0.25.6", features = ["png"] }
 chrono = "0.4.44"

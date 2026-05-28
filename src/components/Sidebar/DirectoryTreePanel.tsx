@@ -7,8 +7,8 @@ import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { useUIStore } from "../../stores/uiStore";
-import { cn, loadTracksFromDir, openContainerFolder } from "../../lib/utils";
-import type { FsEntry, Track } from "../../types";
+import { cn, getTrack, loadTracksFromDir, openContainerFolder } from "../../lib/utils";
+import type { FsEntry } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 
 function ContextMenuItem({
@@ -83,41 +83,16 @@ function TreeNode({
 
   const handleDoubleClick = () => {
     if (!isDir) {
-      // If track is already in the queue, jump to it; otherwise append and play
-      const existingIdx = queue.findIndex((t) => t.path === entry.path);
-      if (existingIdx >= 0) {
-        playTrack(queue[existingIdx]);
-      } else {
-        const track: Track = {
-          path: entry.path,
-          title: "",
-          artist: "",
-          album: "",
-          duration: 0,
-          invalid: false,
-        };
-        appendAndPlay([track]);
-        addTracks(activePlaylistName, [track]);
-        if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
-          saveActivePlaylist()
-        }
-      }
-    }
+      handlePlayFile();
+    } 
   };
 
-  const handlePlayFile = () => {
+  const handlePlayFile = async () => {
     const existingIdx = queue.findIndex((t) => t.path === entry.path);
     if (existingIdx >= 0) {
       playTrack(queue[existingIdx]);
     } else {
-      const track: Track = {
-        path: entry.path,
-        title: "",
-        artist: "",
-        album: "",
-        duration: 0,
-        invalid: false,
-      };
+      const track = await getTrack(entry.path);
       appendAndPlay([track]);
       addTracks(activePlaylistName, [track]);
       if (activePlaylistName === QUEUE_PLAYLIST_NAME) {

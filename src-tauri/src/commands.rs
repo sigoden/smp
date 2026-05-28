@@ -43,14 +43,7 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
                     path,
                     e
                 );
-                results.push(TrackMetadata {
-                    path,
-                    title: None,
-                    artist: None,
-                    album: None,
-                    duration: 0.0,
-                    track_number: None,
-                });
+                results.push(TrackMetadata::minimal(&path));
             }
         }
     }

@@ -142,16 +142,43 @@ export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
     const files: string[] = await collectAudioFiles(dirPath);
     if (files.length === 0) return [];
     const metadata: TrackMetadata[] = await getMetadataBatch(files);
-    return metadata.map((m) => ({
-      path: m.path,
-      title: m.title ?? "",
-      artist: m.artist ?? "",
-      album: m.album ?? "",
-      duration: m.duration,
-      invalid: false,
-    }));
+    return metadata.map((m) => mapMetadataToTrack(m));
   } catch (err) {
     logger.error("utils", "loadTracksFromDir failed", err);
     return [];
   }
 };
+
+/** Load a single track's metadata and return a Track object */
+export async function getTrack(path: string): Promise<Track> {
+  let track: Track = {
+    path,
+    title: "",
+    artist: "",
+    album: "",
+    duration: 0,
+    invalid: true,
+  };
+  try {
+    const metadatas = await getMetadataBatch([path]);
+    if (metadatas.length > 0) {
+      const metadata = metadatas[0];
+      track = mapMetadataToTrack(metadata);
+    }
+  } catch (err) {
+    logger.error("DirectoryTreePanel", `Failed to load metadata for '${path}'`, err);
+  }
+  return track
+}
+
+/** Map TrackMetadata to Track */
+export function mapMetadataToTrack(metadata: TrackMetadata): Track {
+  return {
+    path: metadata.path,
+    title: metadata.title ?? "",
+    artist: metadata.artist ?? "",
+    album: metadata.album ?? "",
+    duration: metadata.duration ?? 0,
+    invalid: false,
+  }
+}
