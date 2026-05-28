@@ -193,7 +193,7 @@ export function trackAlbum(track: Track): string {
 export function trackDuration(track: Track): number {
   return track.duration_ms / 1000;
 }
-export function trackFilename(track: Track): string {
+export function trackFileBasename(track: Track): string {
   return (track.path || "").split(/[/\\]/).pop() || track.path;
 }
 
@@ -207,4 +207,12 @@ export function getBasenameWithoutExt(path: string) {
         return basenameWithExt;
     }
     return basenameWithExt.substring(0, lastDotIndex);
+}
+
+/** Format seconds to m:ss, with configurable placeholder for empty/zero */
+export function formatTrackDuration(seconds: number, placeholder = "--:--"): string {
+  if (!seconds || seconds <= 0) return placeholder;
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }

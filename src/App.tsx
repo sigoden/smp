@@ -24,13 +24,12 @@ function App() {
   const setPosition = usePlayerStore((s) => s.setPosition);
   const setDuration = usePlayerStore((s) => s.setDuration);
   const next = usePlayerStore((s) => s.next);
-  const playerPlay = usePlayerStore((s) => s.play);
-  const playerPause = usePlayerStore((s) => s.pause);
-  const playerNext = usePlayerStore((s) => s.next);
-  const playerPrev = usePlayerStore((s) => s.prev);
+  const play = usePlayerStore((s) => s.play);
+  const pause = usePlayerStore((s) => s.pause);
+  const nextTrack = usePlayerStore((s) => s.next);
+  const prevTrack = usePlayerStore((s) => s.prev);
 
-  // Debounce timer for auto-saving settings
-  // Throttle timer for auto-saving settings
+  // Throttle auto-save: executes immediately if 500ms since last run, otherwise schedules trailing
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRunRef = useRef<number>(0);
   const lastSavedJsonRef = useRef<string | null>(null);
@@ -158,15 +157,15 @@ function App() {
       switch (event.payload) {
         case "play-pause": {
           const playing = usePlayerStore.getState().playing;
-          if (playing) playerPause();
-          else playerPlay();
+          if (playing) pause();
+          else play();
           break;
         }
         case "next":
-          playerNext();
+          nextTrack();
           break;
         case "prev":
-          playerPrev();
+          prevTrack();
           break;
 
       }

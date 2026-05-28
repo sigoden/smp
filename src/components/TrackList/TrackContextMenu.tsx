@@ -1,42 +1,10 @@
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { FolderOpen, Trash2 } from "lucide-react";
 import { usePlaylistStore } from "../../stores/playlistStore";
-import { cn, openContainerFolder } from "../../lib/utils";
+import { openContainerFolder } from "../../lib/utils";
 import type { Track } from "../../types";
-
-function ContextMenuItem({
-  children,
-  onClick,
-  disabled,
-  danger,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <ContextMenuPrimitive.Item
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        danger
-          ? "text-destructive focus:bg-destructive/20 focus:text-destructive"
-          : "focus:bg-accent focus:text-accent-foreground"
-      )}
-    >
-      {children}
-    </ContextMenuPrimitive.Item>
-  );
-}
-
-function ContextSeparator() {
-  return (
-    <ContextMenuPrimitive.Separator className="-mx-1 my-1 h-px bg-border" />
-  );
-}
+import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
 
 export function TrackContextMenu({
   children,

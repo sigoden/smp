@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import {
   Plus,
   Pencil,
@@ -9,45 +9,12 @@ import {
   FolderOpen,
   Play,
 } from "lucide-react";
-import { openPlaylistsDir } from "../../lib/utils";
+import { openPlaylistsDir, cn } from "../../lib/utils";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
-import { cn } from "../../lib/utils";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
-
-function ContextMenuItem({
-  children,
-  onClick,
-  disabled,
-  danger,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <ContextMenuPrimitive.Item
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        danger
-          ? "text-destructive focus:bg-destructive/20 focus:text-destructive"
-          : "focus:bg-accent focus:text-accent-foreground"
-      )}
-    >
-      {children}
-    </ContextMenuPrimitive.Item>
-  );
-}
-
-function ContextSeparator() {
-  return (
-    <ContextMenuPrimitive.Separator className="-mx-1 my-1 h-px bg-border" />
-  );
-}
+import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
 
 export function PlaylistPanel() {
   const playlists = usePlaylistStore((s) => s.playlists);
@@ -81,7 +48,7 @@ export function PlaylistPanel() {
     setEditName("");
   };
 
-  const handleDoubleClick = async (playlistName: string) => {
+  const handleClick = async (playlistName: string) => {
     const tracks = await fetchTracksForPlaylist(playlistName);
     if (tracks.length > 0) {
       loadQueue(tracks);
@@ -161,15 +128,7 @@ export function PlaylistPanel() {
                       "flex items-center gap-2 px-3 py-1.5 cursor-pointer rounded-none text-sm group hover:bg-accent/50",
                       isActive && "bg-accent text-accent-foreground"
                     )}
-                    onDoubleClick={() => handleDoubleClick(pl.name)}
-                    onClick={async () => {
-                      setActivePlaylist(pl.name);
-                      const tracks = await fetchTracksForPlaylist(pl.name);
-                      if (tracks.length > 0) {
-                        loadQueue(tracks);
-                        play();
-                      }
-                    }}
+                    onClick={() => handleClick(pl.name)}
                   >
                     <ListMusic className="h-4 w-4 shrink-0 text-muted-foreground" />
 

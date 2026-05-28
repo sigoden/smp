@@ -72,13 +72,17 @@ ContextMenuContent.displayName = ContextMenuPrimitive.Content.displayName
 const ContextMenuItem = React.forwardRef<
   React.ComponentRef<typeof ContextMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Item> & {
-    inset?: boolean
+    inset?: boolean;
+    danger?: boolean;
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, danger, ...props }, ref) => (
   <ContextMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      danger
+        ? "text-destructive focus:bg-destructive/20 focus:text-destructive"
+        : "focus:bg-accent focus:text-accent-foreground",
       inset && "pl-8",
       className
     )}
@@ -163,6 +167,8 @@ const ContextMenuSeparator = React.forwardRef<
 ))
 ContextMenuSeparator.displayName = ContextMenuPrimitive.Separator.displayName
 
+const ContextSeparator = ContextMenuSeparator
+
 const ContextMenuShortcut = ({
   className,
   ...props
@@ -188,6 +194,7 @@ export {
   ContextMenuRadioItem,
   ContextMenuLabel,
   ContextMenuSeparator,
+  ContextSeparator,
   ContextMenuShortcut,
   ContextMenuGroup,
   ContextMenuPortal,

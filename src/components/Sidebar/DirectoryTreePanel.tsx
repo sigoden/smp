@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
 import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, RefreshCw, PlusCircle } from "lucide-react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
@@ -10,39 +10,7 @@ import { useUIStore } from "../../stores/uiStore";
 import { cn, getTrack, loadTracksFromDir, openContainerFolder } from "../../lib/utils";
 import type { FsEntry } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
-
-function ContextMenuItem({
-  children,
-  onClick,
-  disabled,
-  danger,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <ContextMenuPrimitive.Item
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        danger
-          ? "text-destructive focus:bg-destructive/20 focus:text-destructive"
-          : "focus:bg-accent focus:text-accent-foreground"
-      )}
-    >
-      {children}
-    </ContextMenuPrimitive.Item>
-  );
-}
-
-function ContextSeparator() {
-  return (
-    <ContextMenuPrimitive.Separator className="-mx-1 my-1 h-px bg-border" />
-  );
-}
+import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
 
 function TreeNode({
   entry,
@@ -65,7 +33,7 @@ function TreeNode({
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const syncQueuePlaylist = usePlaylistStore((s) => s.syncQueuePlaylist);
   const setGlobalLoading = useUIStore((s) => s.setLoading);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLocalLoading] = useState(false);
   const isDir = entry.type === "dir";
   const isExpanded = isDir && expandedPaths.has(entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
@@ -73,9 +41,9 @@ function TreeNode({
   const handleClick = async () => {
     if (isDir) {
       if (!isExpanded) {
-        setLoading(true);
+        setLocalLoading(true);
         await refreshDir(entry.path);
-        setLoading(false);
+        setLocalLoading(false);
       }
       toggleExpand(entry.path);
     }

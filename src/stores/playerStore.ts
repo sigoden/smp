@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Track, PlayMode } from "../types";
 import * as audio from "../lib/audio";
+import { logger } from "../lib/logger";
 
 // Guards the next timeupdate callback after a seek() to avoid stale position overwrite
 let _seekGuard = false;
@@ -77,6 +78,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   nowPlaying: null,
 
   loadQueue: (tracks, startIndex) => {
+    if (tracks.length === 0)  return;
     audio.pause();
     audio.stop();
     const { playMode } = get();
@@ -88,19 +90,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     } else if (playMode === "shuffle") {
       currentIndex = Math.floor(Math.random() * tracks.length);
     }
-
+    const track = tracks[currentIndex];
     set({
       queue: tracks,
       currentIndex: currentIndex,
       position: 0,
       duration: 0,
       playing: false,
-      nowPlaying: tracks[currentIndex] || null,
+      nowPlaying: track,
     });
 
-    if (tracks[currentIndex]) {
-      audio.loadTrack(tracks[currentIndex].path);
-    }
+    audio.loadTrack(track.path);
   },
 
   appendAndPlay: (tracks: Track[]) => {
@@ -217,9 +217,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playTrack: async (track: Track) => {
     const { queue } = get();
     const idx = queue.findIndex((t) => t.path === track.path);
-    if (idx >= 0) {
-      set({ currentIndex: idx });
+    if (idx === -1) {
+      logger.error("player", `Unable to play track, Track '${track.path}' is not in queue`);
+      return;
     }
+    set({ currentIndex: idx });
     audio.loadTrack(track.path);
     set({
       nowPlaying: track,

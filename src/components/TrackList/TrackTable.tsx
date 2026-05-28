@@ -9,11 +9,12 @@ import {
   trackArtist,
   trackAlbum,
   trackDuration,
-  trackFilename,
+  trackFileBasename,
+  formatTrackDuration,
 } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import type { Track, TrackColumn } from "../../types";
-import { DEFAULT_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
   title: "minmax(180px, 1fr)",
@@ -27,12 +28,6 @@ const columnWidths: Record<TrackColumn, string> = {
   filename: "minmax(200px, 1fr)",
 };
 
-function formatDuration(seconds: number): string {
-  if (!seconds || seconds <= 0) return "--:--";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
 
 function TrackRow({
   track,
@@ -62,12 +57,12 @@ function TrackRow({
     title: trackTitle(track),
     artist: trackArtist(track),
     album: trackAlbum(track),
-    duration: formatDuration(trackDuration(track)),
+    duration: formatTrackDuration(trackDuration(track)),
     track_number: track.metadata.track_number ?? "",
     genre: track.metadata.genre ?? "",
     album_artist: track.metadata.album_artist ?? "",
     year: track.metadata.year?.toString() ?? "",
-    filename: trackFilename(track),
+    filename: trackFileBasename(track),
   };
 
   return (
@@ -109,7 +104,7 @@ function TrackRow({
 export function TrackTable() {
   const visibleColumns = useUIStore((s) => s.visibleColumns);
   // Always render columns in the fixed order defined by ALL_TRACK_COLUMNS
-  const orderedColumns = DEFAULT_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
+  const orderedColumns = ALL_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
   const tracks = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);

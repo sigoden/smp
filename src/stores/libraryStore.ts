@@ -35,12 +35,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     const { rootDirs, treeData } = get();
     set({
       rootDirs: rootDirs.filter((d) => d !== path),
-      treeData: treeData.filter((entry) => {
-        if ("path" in entry) {
-          return entry.path !== path;
-        }
-        return true;
-      }),
+      treeData: treeData.filter((entry) => entry.path !== path),
     });
   },
 
@@ -94,9 +89,8 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       return;
     }
     try {
-      const firstDir = rootDirs[0];
-      const entries: FsEntry[] = await scanDirectory(firstDir);
-      set({ treeData: entries });
+      const results = await Promise.all(rootDirs.map((dir) => scanDirectory(dir)));
+      set({ treeData: results.flat() });
     } catch (err) {
       logger.error("library", "refreshAll failed", err);
     }

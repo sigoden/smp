@@ -4,13 +4,7 @@ import { ProgressBar } from "./ProgressBar";
 import { VolumeSlider } from "./VolumeSlider";
 import { PlayModeToggle } from "./PlayModeToggle";
 import { usePlayerStore } from "../../stores/playerStore";
-
-function formatTime(seconds: number): string {
-  if (!seconds || seconds < 0) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
+import { formatTrackDuration } from "../../lib/utils";
 
 export function PlayerBar() {
   const position = usePlayerStore((s) => s.position);
@@ -33,8 +27,8 @@ export function PlayerBar() {
 
         {/* Row 3: time display */}
         <div className="flex justify-between w-full text-xs text-muted-foreground tabular-nums">
-          <span>{hasTracks ? formatTime(position) : "0:00"}</span>
-          <span>{hasTracks ? formatTime(duration) : "0:00"}</span>
+          <span>{hasTracks ? formatTrackDuration(position, "0:00") : "0:00"}</span>
+          <span>{hasTracks ? formatTrackDuration(duration, "0:00") : "0:00"}</span>
         </div>
       </div>
 
