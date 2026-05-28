@@ -12,39 +12,36 @@ use tauri::{
 };
 use tauri_plugin_log::{Target, TargetKind};
 
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            let _ = app
-                .get_webview_window("main")
-                .map(|window| {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                });
+            let _ = app.get_webview_window("main").map(|window| {
+                let _ = window.show();
+                let _ = window.set_focus();
+            });
         }))
         .plugin(
-                tauri_plugin_log::Builder::new()
-                    .level(logger::retrieve_log_level())
-                    .targets([
-                        Target::new(TargetKind::Stdout),
-                        Target::new(TargetKind::LogDir {
-                            file_name: Some("app".into()),
-                        }),
-                    ])
-                    .format(|out, message, record| {
-                        out.finish(format_args!(
-                            "{} {} [{}] {}",
-                            chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%.3f%:z"),
-                            record.level(),
-                            record.target(),
-                            message
-                        ))
-                    })
-                    .build(),
+            tauri_plugin_log::Builder::new()
+                .level(logger::retrieve_log_level())
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::LogDir {
+                        file_name: Some("app".into()),
+                    }),
+                ])
+                .format(|out, message, record| {
+                    out.finish(format_args!(
+                        "{} {} [{}] {}",
+                        chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%.3f%:z"),
+                        record.level(),
+                        record.target(),
+                        message
+                    ))
+                })
+                .build(),
         )
         .setup(|app| {
             logger::clear_logs_on_start(app.handle());

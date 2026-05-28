@@ -19,11 +19,12 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
     let path = Path::new(file_path);
 
     let file = match read_from_path(path) {
-        Ok(f) => {
-            f
-        }
+        Ok(f) => f,
         Err(_) => {
-            log::warn!("read_metadata: {} parse failed, returning minimal metadata", file_path);
+            log::warn!(
+                "read_metadata: {} parse failed, returning minimal metadata",
+                file_path
+            );
             return Ok(TrackMetadata {
                 path: file_path.to_string(),
                 title: None,
@@ -69,7 +70,8 @@ pub fn write_metadata(
     use lofty::file::TaggedFileExt;
 
     let path = std::path::Path::new(file_path);
-    let mut tagged_file = read_from_path(path).map_err(|e| format!("Failed to read file: {}", e))?;
+    let mut tagged_file =
+        read_from_path(path).map_err(|e| format!("Failed to read file: {}", e))?;
 
     let tag = if tagged_file.contains_tag_type(lofty::tag::TagType::Id3v2) {
         tagged_file.tag_mut(lofty::tag::TagType::Id3v2)

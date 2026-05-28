@@ -191,11 +191,6 @@ function SelectSearch({
     [options, search]
   )
 
-  React.useEffect(() => {
-    if (!open) {
-      setSearch("")
-    }
-  }, [open])
 
   return (
     <SelectPrimitive.Root

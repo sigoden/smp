@@ -46,7 +46,11 @@ fn parse_level_filter(level: &str) -> Option<LevelFilter> {
     }
 }
 
-pub fn write_log_entry(app: &AppHandle, entry: &LogEntry, level: LevelFilter) -> Result<(), String> {
+pub fn write_log_entry(
+    app: &AppHandle,
+    entry: &LogEntry,
+    level: LevelFilter,
+) -> Result<(), String> {
     // Filter: skip entries whose severity is below the configured threshold.
     if let Some(entry_level) = parse_level_filter(&entry.level) {
         if entry_level > level {

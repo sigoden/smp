@@ -107,7 +107,11 @@ pub fn collect_audio_files(path: &str) -> Result<Vec<String>, String> {
     }
 
     let mut files = Vec::new();
-    for entry in WalkDir::new(path).follow_links(true).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(path)
+        .follow_links(true)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         if entry.file_type().is_file() && is_audio_file(entry.path()) {
             files.push(entry.path().to_string_lossy().to_string());
         }

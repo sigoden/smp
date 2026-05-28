@@ -1,15 +1,18 @@
+use crate::logger::log_cmd_err;
 use crate::metadata::TrackMetadata;
 use crate::playlist::{Playlist, TrackEntry};
 use crate::scanner::FsEntry;
 use crate::settings::AppSettings;
-use crate::logger::log_cmd_err;
 
-use tauri::AppHandle;
 use tauri::command;
+use tauri::AppHandle;
 
 #[command]
 pub fn scan_directory(path: String) -> Result<Vec<FsEntry>, String> {
-    log_cmd_err(crate::scanner::scan_directory(&path), format!("scan_directory({path})"))
+    log_cmd_err(
+        crate::scanner::scan_directory(&path),
+        format!("scan_directory({path})"),
+    )
 }
 
 #[command]
@@ -22,7 +25,10 @@ pub fn collect_audio_files(path: String) -> Result<Vec<String>, String> {
 
 #[command]
 pub fn read_metadata(path: String) -> Result<TrackMetadata, String> {
-    log_cmd_err(crate::metadata::read_metadata(&path), format!("read_metadata({path})"))
+    log_cmd_err(
+        crate::metadata::read_metadata(&path),
+        format!("read_metadata({path})"),
+    )
 }
 
 #[command]
@@ -32,7 +38,11 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
         match crate::metadata::read_metadata(&path) {
             Ok(meta) => results.push(meta),
             Err(e) => {
-                log::warn!("[command::get_metadata_batch] Failed to read metadata for {}: {}", path, e);
+                log::warn!(
+                    "[command::get_metadata_batch] Failed to read metadata for {}: {}",
+                    path,
+                    e
+                );
                 results.push(TrackMetadata {
                     path,
                     title: None,
@@ -49,7 +59,10 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
 
 #[command]
 pub fn list_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
-    log_cmd_err(crate::playlist::list_playlists(&app), format!("list_playlists"))
+    log_cmd_err(
+        crate::playlist::list_playlists(&app),
+        format!("list_playlists"),
+    )
 }
 
 #[command]

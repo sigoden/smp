@@ -37,13 +37,11 @@ fn playlist_to_m3u8(playlist: &Playlist) -> String {
             (Some(a), Some(t)) => format!("{} - {}", a, t),
             (Some(a), None) => a.clone(),
             (None, Some(t)) => t.clone(),
-            (None, None) => {
-                std::path::Path::new(&track.path)
-                    .file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("Unknown")
-                    .to_string()
-            }
+            (None, None) => std::path::Path::new(&track.path)
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("Unknown")
+                .to_string(),
         };
         output.push_str(&format!("#EXTINF:{},{}\n", track.duration, title_str));
         output.push_str(&format!("{}\n", track.path));
@@ -104,7 +102,12 @@ fn m3u8_to_playlist(name: &str, content: &str) -> Playlist {
 pub(crate) fn sanitize_filename(name: &str) -> String {
     name.chars()
         .map(|c| {
-            if c.is_alphabetic() || c.is_ascii_digit() || c == '-' || c == '_' || c == '.' || c == ' '
+            if c.is_alphabetic()
+                || c.is_ascii_digit()
+                || c == '-'
+                || c == '_'
+                || c == '.'
+                || c == ' '
             {
                 c
             } else {
@@ -113,7 +116,6 @@ pub(crate) fn sanitize_filename(name: &str) -> String {
         })
         .collect()
 }
-
 
 /// List all playlists with lightweight metadata (no track data).
 /// Each returned playlist has an empty `tracks` vector and a `track_count`
@@ -126,14 +128,13 @@ pub fn list_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
         return Ok(playlists);
     }
 
-    let entries = fs::read_dir(&dir)
-        .map_err(|e| format!("Failed to read playlists dir: {}", e))?;
+    let entries = fs::read_dir(&dir).map_err(|e| format!("Failed to read playlists dir: {}", e))?;
 
     for entry in entries.flatten() {
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("m3u8") {
-            let content = fs::read_to_string(&path)
-                .map_err(|e| format!("Failed to read playlist: {}", e))?;
+            let content =
+                fs::read_to_string(&path).map_err(|e| format!("Failed to read playlist: {}", e))?;
             let name = path
                 .file_stem()
                 .and_then(|s| s.to_str())
