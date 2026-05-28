@@ -33,6 +33,7 @@ function App() {
   // Throttle timer for auto-saving settings
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRunRef = useRef<number>(0);
+  const lastSavedJsonRef = useRef<string | null>(null);
 
   const performSave = () => {
     const player = usePlayerStore.getState();
@@ -40,7 +41,7 @@ function App() {
     const ui = useUIStore.getState();
     const playlist = usePlaylistStore.getState();
 
-    saveSettings({
+    const settings = {
       sidebar_width: ui.sidebarWidth,
       root_dirs: library.rootDirs,
       expanded_paths: Array.from(library.expandedPaths),
@@ -50,7 +51,14 @@ function App() {
       sidebar_tab: ui.sidebarTab,
       active_playlist_name: playlist.activePlaylistName,
       track_index: player.currentIndex,
-    });
+    };
+
+    // Serialized dirty check: skip IPC if nothing relevant changed
+    const json = JSON.stringify(settings);
+    if (json === lastSavedJsonRef.current) return;
+    lastSavedJsonRef.current = json;
+
+    saveSettings(settings);
   };
 
   const scheduleSave = useCallback(() => {
