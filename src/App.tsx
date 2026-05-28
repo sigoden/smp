@@ -7,7 +7,7 @@ import { ResizeHandle } from "./components/Sidebar/ResizeHandle";
 import { TrackListHeader } from "./components/TrackList/TrackListHeader";
 import { TrackTable } from "./components/TrackList/TrackTable";
 import { PlayerBar } from "./components/Player/PlayerBar";
-import { LoadingBar } from "./components/ui/LoadingBar";
+import { LoadingBar } from "./components/ui/loading-bar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { useUIStore } from "./stores/uiStore";
