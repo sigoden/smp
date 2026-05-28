@@ -18,7 +18,8 @@ interface PlayerState {
 
   // Actions
   loadQueue: (tracks: Track[], index?: number) => void;
-  appendAndPlay: (tracks: Track[]) => void;
+  appendToQueue: (tracks: Track[]) => void;
+  pushQueueAndPlay: (track: Track) => void;
   play: () => void;
   pause: () => void;
   stop: () => void;
@@ -103,29 +104,41 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     audio.loadTrack(track.path);
   },
 
-  appendAndPlay: (tracks: Track[]) => {
+  appendToQueue: (tracks: Track[]) => {
     if (tracks.length === 0) return;
-    let targetTrack = tracks[0];
-    const { queue, playMode } = get();
+    const { queue, currentIndex, playMode } = get();
     const existingPaths = new Set(queue.map((t) => t.path));
     const newTracks = tracks.filter((t) => !existingPaths.has(t.path));
 
     if (newTracks.length === 0) return;
 
     const newQueue = [...queue, ...newTracks];
-    if (playMode === "shuffle" && tracks.length > 1) {
-      targetTrack = newQueue[Math.floor(Math.random() * newQueue.length)];
+    let newIndex = currentIndex;
+    if (queue.length === 0) {
+      newIndex = playMode === "shuffle" ? Math.floor(Math.random() * newQueue.length) : 0;
     }
-    const targetIndex = newQueue.findIndex((t) => t.path === targetTrack.path);
-
-    if (!targetTrack) return;
-    audio.loadTrack(targetTrack.path);
     set({
       queue: newQueue,
-      currentIndex: targetIndex,
-      nowPlaying: targetTrack,
+      currentIndex: newIndex,
+    });
+  },
+
+  pushQueueAndPlay: (track: Track) => {
+    const { queue } = get();
+
+    let newQueue = queue;
+    let index = queue.findIndex((t) => t.path === track.path);
+    if (index === - 1) {
+      newQueue = [...queue, track];
+      index = newQueue.length - 1;
+    }
+    audio.loadTrack(track.path);
+    set({
+      queue: newQueue,
+      currentIndex: index,
+      nowPlaying: track,
       position: 0,
-      duration: targetTrack.duration_ms / 1000,
+      duration: track.duration_ms / 1000,
       playing: true,
     });
     audio.play();

@@ -77,8 +77,8 @@ function TreeNode({
   const rootDirs = useLibraryStore((s) => s.rootDirs);
   const toggleExpand = useLibraryStore((s) => s.toggleExpand);
   const loadQueue = usePlayerStore((s) => s.loadQueue);
-  const appendAndPlay = usePlayerStore((s) => s.appendAndPlay);
-  const play = usePlayerStore((s) => s.play);
+  const appendToQueue = usePlayerStore((s) => s.appendToQueue);
+  const pushQueueAndPlay = usePlayerStore((s) => s.pushQueueAndPlay);
   const playTrack = usePlayerStore((s) => s.playTrack);
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
@@ -116,7 +116,7 @@ function TreeNode({
       playTrack(queue[existingIdx]);
     } else {
       const track = await getTrack(entry.path);
-      appendAndPlay([track]);
+      pushQueueAndPlay(track);
       addTracks(activePlaylistName, [track]);
       if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
         saveActivePlaylist();
@@ -130,7 +130,6 @@ function TreeNode({
     setGlobalLoading(false);
     if (tracks.length > 0) {
       loadQueue(tracks);
-      play();
       syncQueuePlaylist(tracks);
     }
   };
@@ -140,7 +139,7 @@ function TreeNode({
     const tracks = await loadTracksFromDir(entry.path);
     setGlobalLoading(false);
     if (tracks.length > 0) {
-      appendAndPlay(tracks);
+      appendToQueue(tracks);
       addTracks(activePlaylistName, tracks);
       if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
         saveActivePlaylist();
