@@ -76,7 +76,9 @@ pub fn clear_logs_on_start(app: &tauri::AppHandle) {
             .map(|f| app_log_dir.join(f))
         {
             if log_path.exists() {
-                let _ = fs::write(&log_path, "");
+                if let Err(e) = fs::write(&log_path, "") {
+                    log::warn!("Failed to clear log file {:?}: {}", log_path, e);
+                }
             }
         }
     }

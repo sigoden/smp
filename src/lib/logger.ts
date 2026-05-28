@@ -3,7 +3,7 @@ import { emit } from "@tauri-apps/api/event";
 type LogLevel = "INFO" | "WARN" | "ERROR";
 
 function formatLog(level: LogLevel, module: string, message: string): string {
-  const ts = new Date().toISOString(); // HH:MM:SS.mmm
+  const ts = new Date().toISOString();
   return `[${ts}] [${level}] [${module}] ${message}`;
 }
 

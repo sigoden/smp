@@ -152,7 +152,7 @@ pub fn run() {
             commands::save_playlist,
             commands::delete_playlist,
             commands::rename_playlist,
-            commands::open_in_explorer,
+            commands::reveal_in_file_manager,
             commands::open_playlists_dir,
             commands::load_settings,
             commands::save_settings,

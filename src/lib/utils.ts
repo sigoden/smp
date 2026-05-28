@@ -29,8 +29,8 @@ export function createQueuePlaylist(): PlaylistData {
 // ──── Filesystem ────
 
 /** Open a path in the system file manager */
-export async function openInExplorer(path: string): Promise<void> {
-  await invoke("open_in_explorer", { path });
+export async function revealInFileManager(path: string): Promise<void> {
+  await invoke("reveal_in_file_manager", { path });
 }
 
 /** List audio files in a directory */
@@ -131,7 +131,7 @@ export async function openContainerFolder(filePath: string): Promise<void> {
   const normalized = filePath.replace(/[/\\]$/, '');
   const lastSep = Math.max(normalized.lastIndexOf('/'), normalized.lastIndexOf('\\'));
   const dirPath = lastSep > 0 ? normalized.substring(0, lastSep) : normalized;
-  await openInExplorer(dirPath);
+  await revealInFileManager(dirPath);
 }
 
 /** Load all audio files from a directory and return track list */

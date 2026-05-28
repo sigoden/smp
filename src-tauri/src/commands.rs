@@ -55,7 +55,7 @@ pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, Stri
 pub fn list_playlists(app: AppHandle) -> Result<Vec<Playlist>, String> {
     log_cmd_err(
         crate::playlist::list_playlists(&app),
-        format!("list_playlists"),
+        "list_playlists".to_string(),
     )
 }
 
@@ -100,23 +100,33 @@ pub fn load_settings(app: AppHandle) -> AppSettings {
 pub fn save_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
     log_cmd_err(
         crate::settings::save_settings(&app, &settings),
-        format!("save_settings"),
+        "save_settings".to_string(),
     )
+}
+
+/// Resolve the target directory and whether the original path was a file.
+/// Shared by all platform-specific `reveal_in_file_manager` implementations.
+fn resolve_reveal_target(path: &str) -> (std::path::PathBuf, bool) {
+    let p = std::path::Path::new(path);
+    let is_file = p.is_file();
+    let dir = if is_file {
+        p.parent()
+            .map(|d| d.to_path_buf())
+            .unwrap_or_else(|| p.to_path_buf())
+    } else {
+        p.to_path_buf()
+    };
+    (dir, is_file)
 }
 
 #[cfg(target_os = "windows")]
 #[command]
-pub fn open_in_explorer(path: String) -> Result<(), String> {
+pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
     log_cmd_err(
         (|| {
-            let path = std::path::Path::new(&path);
-            let dir = if path.is_file() {
-                path.parent().unwrap_or(path)
-            } else {
-                path
-            };
-            let arg = if path.is_file() {
-                format!("/select,{}", path.to_string_lossy())
+            let (dir, is_file) = resolve_reveal_target(&path);
+            let arg = if is_file {
+                format!("/select,{}", path)
             } else {
                 dir.to_string_lossy().to_string()
             };
@@ -126,49 +136,39 @@ pub fn open_in_explorer(path: String) -> Result<(), String> {
                 .map_err(|e| format!("Failed to open explorer: {}", e))?;
             Ok(())
         })(),
-        format!("open_in_explorer({path})"),
+        format!("reveal_in_file_manager({path})"),
     )
 }
 
 #[cfg(target_os = "macos")]
 #[command]
-pub fn open_in_explorer(path: String) -> Result<(), String> {
+pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
     log_cmd_err(
         (|| {
-            let path = std::path::Path::new(&path);
-            let dir = if path.is_file() {
-                path.parent().unwrap_or(path)
-            } else {
-                path
-            };
+            let (dir, _) = resolve_reveal_target(&path);
             std::process::Command::new("open")
-                .arg(dir)
+                .arg(&dir)
                 .spawn()
                 .map_err(|e| format!("Failed to open finder: {}", e))?;
             Ok(())
         })(),
-        format!("open_in_explorer({path})"),
+        format!("reveal_in_file_manager({path})"),
     )
 }
 
 #[cfg(target_os = "linux")]
 #[command]
-pub fn open_in_explorer(path: String) -> Result<(), String> {
+pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
     log_cmd_err(
         (|| {
-            let path = std::path::Path::new(&path);
-            let dir = if path.is_file() {
-                path.parent().unwrap_or(path)
-            } else {
-                path
-            };
+            let (dir, _) = resolve_reveal_target(&path);
             std::process::Command::new("xdg-open")
-                .arg(dir)
+                .arg(&dir)
                 .spawn()
                 .map_err(|e| format!("Failed to open file manager: {}", e))?;
             Ok(())
         })(),
-        format!("open_in_explorer({path})"),
+        format!("reveal_in_file_manager({path})"),
     )
 }
 
@@ -177,7 +177,7 @@ pub fn open_playlists_dir(app: AppHandle) -> Result<(), String> {
     log_cmd_err(
         (|| {
             let playlists_dir = crate::playlist::playlists_dir(&app)?;
-            open_in_explorer(playlists_dir.to_string_lossy().to_string())
+            reveal_in_file_manager(playlists_dir.to_string_lossy().to_string())
         })(),
         format!("open_playlists_dir"),
     )

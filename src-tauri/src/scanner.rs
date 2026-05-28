@@ -6,23 +6,17 @@ use walkdir::WalkDir;
 const AUDIO_EXTENSIONS: &[&str] = &["mp3", "flac", "ogg", "wav", "m4a", "aac", "wma", "opus"];
 
 #[derive(Debug, Clone, Serialize)]
-pub struct FileEntry {
-    pub name: String,
-    pub path: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct DirEntry {
-    pub name: String,
-    pub path: String,
-    pub children: Vec<FsEntry>,
-}
-
-#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FsEntry {
-    File(FileEntry),
-    Dir(DirEntry),
+    File {
+        name: String,
+        path: String,
+    },
+    Dir {
+        name: String,
+        path: String,
+        children: Vec<FsEntry>,
+    },
 }
 
 fn is_audio_file(path: &Path) -> bool {
@@ -64,33 +58,33 @@ pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
                 continue;
             }
             let children = scan_directory(&full_path).unwrap_or_default();
-            entries.push(FsEntry::Dir(DirEntry {
+            entries.push(FsEntry::Dir {
                 name,
                 path: full_path,
                 children,
-            }));
+            });
         } else if file_type.is_file() && is_audio_file(&entry.path()) {
-            entries.push(FsEntry::File(FileEntry {
+            entries.push(FsEntry::File {
                 name,
                 path: full_path,
-            }));
+            });
         }
     }
 
     // Sort: directories first, then files, alphabetically
     entries.sort_by(|a, b| {
-        let a_is_dir = matches!(a, FsEntry::Dir(_));
-        let b_is_dir = matches!(b, FsEntry::Dir(_));
+        let a_is_dir = matches!(a, FsEntry::Dir { .. });
+        let b_is_dir = matches!(b, FsEntry::Dir { .. });
         if a_is_dir != b_is_dir {
             b_is_dir.cmp(&a_is_dir)
         } else {
             let a_name = match a {
-                FsEntry::Dir(d) => &d.name,
-                FsEntry::File(f) => &f.name,
+                FsEntry::Dir { name, .. } => name,
+                FsEntry::File { name, .. } => name,
             };
             let b_name = match b {
-                FsEntry::Dir(d) => &d.name,
-                FsEntry::File(f) => &f.name,
+                FsEntry::Dir { name, .. } => name,
+                FsEntry::File { name, .. } => name,
             };
             a_name.to_lowercase().cmp(&b_name.to_lowercase())
         }
@@ -110,6 +104,9 @@ pub fn collect_audio_files(path: &str) -> Result<Vec<String>, String> {
     for entry in WalkDir::new(path)
         .follow_links(true)
         .into_iter()
+        .filter_entry(|e| {
+            !e.file_name().to_str().is_some_and(|s| s.starts_with('.'))
+        })
         .filter_map(|e| e.ok())
     {
         if entry.file_type().is_file() && is_audio_file(entry.path()) {

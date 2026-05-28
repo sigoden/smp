@@ -20,17 +20,8 @@ pub struct TrackMetadata {
 pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
     let path = Path::new(file_path);
 
-    let tagged_file = match read_from_path(path) {
-        Ok(f) => f,
-        Err(e) => {
-            log::warn!(
-                "read_metadata_lofty: Failed to parse '{}': {}. Returning default metadata.",
-                file_path,
-                e
-            );
-            return Ok(TrackMetadata::default());
-        }
-    };
+    let tagged_file =
+        read_from_path(path).map_err(|e| format!("Failed to read metadata: {}", e))?;
 
     let duration_ms = {
         let dur = tagged_file.properties().duration();
@@ -49,29 +40,19 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
         .filter(|t| !t.is_empty())
         .or_else(|| tagged_file.first_tag());
 
-    let (title, artist, album, track_number, genre, album_artist, year) = tag
-        .map(|t| {
-            (
-                t.title().map(|s| s.to_string()),
-                t.artist().map(|s| s.to_string()),
-                t.album().map(|s| s.to_string()),
-                t.track().map(|n| n.to_string()),
-                t.genre().map(|s| s.to_string()),
-                t.get_string(ItemKey::AlbumArtist).map(|s| s.to_string()),
-                t.date().map(|ts| ts.year as usize),
-            )
-        })
-        .unwrap_or_default();
+    let meta = tag.map(|t| TrackMetadata {
+        title: t.title().map(|s| s.to_string()),
+        artist: t.artist().map(|s| s.to_string()),
+        album: t.album().map(|s| s.to_string()),
+        track_number: t.track().map(|n| n.to_string()),
+        genre: t.genre().map(|s| s.to_string()),
+        album_artist: t.get_string(ItemKey::AlbumArtist).map(|s| s.to_string()),
+        year: t.date().map(|ts| ts.year as usize),
+        duration_ms: None, // filled below
+    });
 
     Ok(TrackMetadata {
-        title,
-        artist,
-        album,
         duration_ms,
-        track_number,
-        genre,
-        album_artist,
-        year,
+        ..meta.unwrap_or_default()
     })
 }
-

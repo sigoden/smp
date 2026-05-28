@@ -102,7 +102,7 @@ fn m3u8_to_playlist(name: &str, content: &str) -> Playlist {
     }
 }
 
-pub(crate) fn sanitize_filename(name: &str) -> String {
+fn sanitize_filename(name: &str) -> String {
     name.chars()
         .map(|c| {
             if c.is_alphabetic()
