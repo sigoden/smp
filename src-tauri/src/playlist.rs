@@ -1,4 +1,4 @@
-use crate::metadata::{TrackMetadata, read_metadata};
+use crate::metadata::{read_metadata, TrackMetadata};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;

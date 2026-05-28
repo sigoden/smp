@@ -33,12 +33,12 @@ pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
     }
 
     let mut entries: Vec<FsEntry> = Vec::new();
-    let mut dir_iter = match fs::read_dir(path) {
+    let dir_iter = match fs::read_dir(path) {
         Ok(iter) => iter,
         Err(e) => return Err(format!("Failed to read directory: {}", e)),
     };
 
-    while let Some(entry) = dir_iter.next() {
+    for entry in dir_iter {
         let entry = match entry {
             Ok(e) => e,
             Err(_) => continue,
@@ -104,9 +104,7 @@ pub fn collect_audio_files(path: &str) -> Result<Vec<String>, String> {
     for entry in WalkDir::new(path)
         .follow_links(true)
         .into_iter()
-        .filter_entry(|e| {
-            !e.file_name().to_str().is_some_and(|s| s.starts_with('.'))
-        })
+        .filter_entry(|e| !e.file_name().to_str().is_some_and(|s| s.starts_with('.')))
         .filter_map(|e| e.ok())
     {
         if entry.file_type().is_file() && is_audio_file(entry.path()) {
@@ -115,7 +113,7 @@ pub fn collect_audio_files(path: &str) -> Result<Vec<String>, String> {
     }
 
     // Sort alphabetically
-    files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    files.sort_by_key(|a| a.to_lowercase());
 
     Ok(files)
 }

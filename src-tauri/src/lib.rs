@@ -28,13 +28,13 @@ pub fn run() {
                 .level(logger::retrieve_log_level())
                 .filter(|metadata| metadata.target().starts_with("app_lib"))
                 .targets({
-                    let mut targets = vec![];
-                    #[cfg(debug_assertions)]
-                    targets.push(Target::new(TargetKind::Stdout));
-                    targets.push(Target::new(TargetKind::LogDir {
-                        file_name: Some("app".into()),
-                    }));
-                    targets
+                    vec![
+                        #[cfg(debug_assertions)]
+                        Target::new(TargetKind::Stdout),
+                        Target::new(TargetKind::LogDir {
+                            file_name: Some("app".into()),
+                        }),
+                    ]
                 })
                 .format(|out, message, record| {
                     out.finish(format_args!(

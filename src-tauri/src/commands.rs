@@ -179,6 +179,6 @@ pub fn open_playlists_dir(app: AppHandle) -> Result<(), String> {
             let playlists_dir = crate::playlist::playlists_dir(&app)?;
             reveal_in_file_manager(playlists_dir.to_string_lossy().to_string())
         })(),
-        format!("open_playlists_dir"),
+        "open_playlists_dir".to_string(),
     )
 }
