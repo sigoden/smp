@@ -1,3 +1,5 @@
+use natord;
+use rayon::prelude::*;
 use serde::Serialize;
 use std::fs;
 use std::path::Path;
@@ -32,47 +34,44 @@ pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
         return Err(format!("Not a directory: {}", path.display()));
     }
 
-    let mut entries: Vec<FsEntry> = Vec::new();
     let dir_iter = match fs::read_dir(path) {
         Ok(iter) => iter,
         Err(e) => return Err(format!("Failed to read directory: {}", e)),
     };
 
-    for entry in dir_iter {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(_) => continue,
-        };
+    let entries: Vec<_> = dir_iter.filter_map(|e| e.ok()).collect();
 
-        let file_type = match entry.file_type() {
-            Ok(ft) => ft,
-            Err(_) => continue,
-        };
+    let mut results: Vec<FsEntry> = entries
+        .par_iter()
+        .filter_map(|entry| {
+            let file_type = entry.file_type().ok()?;
+            let name = entry.file_name().to_string_lossy().to_string();
+            let full_path = entry.path().to_string_lossy().to_string();
 
-        let name = entry.file_name().to_string_lossy().to_string();
-        let full_path = entry.path().to_string_lossy().to_string();
-
-        if file_type.is_dir() {
-            // Skip hidden directories
-            if name.starts_with('.') {
-                continue;
+            if file_type.is_dir() {
+                // Skip hidden directories
+                if name.starts_with('.') {
+                    return None;
+                }
+                let children = scan_directory(&full_path).unwrap_or_default();
+                Some(FsEntry::Dir {
+                    name,
+                    path: full_path,
+                    children,
+                })
+            } else if file_type.is_file() && is_audio_file(&entry.path()) {
+                Some(FsEntry::File {
+                    name,
+                    path: full_path,
+                })
+            } else {
+                None
             }
-            let children = scan_directory(&full_path).unwrap_or_default();
-            entries.push(FsEntry::Dir {
-                name,
-                path: full_path,
-                children,
-            });
-        } else if file_type.is_file() && is_audio_file(&entry.path()) {
-            entries.push(FsEntry::File {
-                name,
-                path: full_path,
-            });
-        }
-    }
+        })
+        .collect();
 
     // Sort: directories first, then files, alphabetically
-    entries.sort_by(|a, b| {
+    results.par_sort_by(|a, b| {
         let a_is_dir = matches!(a, FsEntry::Dir { .. });
         let b_is_dir = matches!(b, FsEntry::Dir { .. });
         if a_is_dir != b_is_dir {
@@ -86,11 +85,11 @@ pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
                 FsEntry::Dir { name, .. } => name,
                 FsEntry::File { name, .. } => name,
             };
-            a_name.to_lowercase().cmp(&b_name.to_lowercase())
+            natord::compare_ignore_case(a_name, b_name)
         }
     });
 
-    Ok(entries)
+    Ok(results)
 }
 
 /// Returns all audio files recursively from a directory (flat list)
