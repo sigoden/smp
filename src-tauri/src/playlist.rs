@@ -1,4 +1,5 @@
-use crate::metadata::TrackMetadata;
+use crate::metadata::{TrackMetadata, read_metadata};
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -86,12 +87,7 @@ fn m3u8_to_playlist(name: &str, content: &str) -> Playlist {
             metadata: TrackMetadata {
                 title,
                 artist,
-                album: None,
-                duration_ms: None,
-                track_number: None,
-                genre: None,
-                album_artist: None,
-                year: None,
+                ..Default::default()
             },
             duration_ms: (duration * 1000.0) as u32,
             invalid: false,
@@ -183,13 +179,13 @@ pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntr
     // Use the pure parser (unchanged) to parse the m3u8 content
     let mut playlist = m3u8_to_playlist(name, &content);
 
-    // Externalized validation — post-process each track
-    for track in &mut playlist.tracks {
+    // Externalized validation — post-process each track in parallel
+    playlist.tracks.par_iter_mut().for_each(|track| {
         if !std::path::Path::new(&track.path).exists() {
             track.invalid = true;
         } else {
             // File exists — re-read metadata from actual audio
-            match crate::metadata::read_metadata(&track.path) {
+            match read_metadata(&track.path) {
                 Ok(meta) => {
                     track.metadata = meta;
                     if let Some(ms) = track.metadata.duration_ms {
@@ -202,7 +198,7 @@ pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntr
                 }
             }
         }
-    }
+    });
 
     Ok(playlist.tracks)
 }

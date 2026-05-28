@@ -4,6 +4,7 @@ use crate::playlist::{Playlist, TrackEntry};
 use crate::scanner::FsEntry;
 use crate::settings::AppSettings;
 
+use rayon::prelude::*;
 use tauri::command;
 use tauri::AppHandle;
 
@@ -33,20 +34,20 @@ pub fn read_metadata(path: String) -> Result<TrackMetadata, String> {
 
 #[command]
 pub fn get_metadata_batch(paths: Vec<String>) -> Result<Vec<TrackMetadata>, String> {
-    let mut results = Vec::with_capacity(paths.len());
-    for path in paths {
-        match crate::metadata::read_metadata(&path) {
-            Ok(meta) => results.push(meta),
+    let results: Vec<TrackMetadata> = paths
+        .par_iter()
+        .map(|path| match crate::metadata::read_metadata(path) {
+            Ok(meta) => meta,
             Err(e) => {
                 log::warn!(
                     "[command::get_metadata_batch] Failed to read metadata for {}: {}",
                     path,
                     e
                 );
-                results.push(TrackMetadata::default());
+                TrackMetadata::default()
             }
-        }
-    }
+        })
+        .collect();
     Ok(results)
 }
 
