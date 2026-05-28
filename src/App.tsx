@@ -21,13 +21,7 @@ import type { PlayMode, SidebarTab, TrackColumn } from "./types";
 function App() {
   const sidebarTab = useUIStore((s) => s.sidebarTab);
   const setTab = useUIStore((s) => s.setTab);
-  const setPosition = usePlayerStore((s) => s.setPosition);
-  const setDuration = usePlayerStore((s) => s.setDuration);
-  const next = usePlayerStore((s) => s.next);
-  const play = usePlayerStore((s) => s.play);
-  const pause = usePlayerStore((s) => s.pause);
-  const nextTrack = usePlayerStore((s) => s.next);
-  const prevTrack = usePlayerStore((s) => s.prev);
+  // Audio/tray callbacks use usePlayerStore.getState() at call-time; no captured selectors needed
 
   // Throttle auto-save: executes immediately if 500ms since last run, otherwise schedules trailing
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -139,13 +133,13 @@ function App() {
     // Set up audio callbacks
     setCallbacks({
       onTimeUpdate: (currentTime) => {
-        setPosition(currentTime);
+        usePlayerStore.getState().setPosition(currentTime);
       },
       onDurationChange: (duration) => {
-        setDuration(duration);
+        usePlayerStore.getState().setDuration(duration);
       },
       onEnded: () => {
-        next();
+        usePlayerStore.getState().next();
       },
       onError: (error) => {
         console.error(error);
@@ -154,20 +148,18 @@ function App() {
 
     // Listen for tray actions
     const unlistenPlayPause = listen<string>("tray-action", (event) => {
+      const store = usePlayerStore.getState();
       switch (event.payload) {
-        case "play-pause": {
-          const playing = usePlayerStore.getState().playing;
-          if (playing) pause();
-          else play();
+        case "play-pause":
+          if (store.playing) store.pause();
+          else store.play();
           break;
-        }
         case "next":
-          nextTrack();
+          store.next();
           break;
         case "prev":
-          prevTrack();
+          store.prev();
           break;
-
       }
     });
 
@@ -184,7 +176,7 @@ function App() {
       unsubUI();
       unsubPlaylist();
     };
-  }, []);
+  }, [scheduleSave]);
 
   // Update tray tooltip when nowPlaying changes
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
