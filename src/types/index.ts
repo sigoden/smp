@@ -1,5 +1,12 @@
 import type { ALL_TRACK_COLUMNS } from "../lib/constants";
 
+/** A root directory with its tree data and per-root expanded paths (relative, '/' = root itself) */
+export interface RootDir {
+  path: string;
+  tree: FsEntry[];
+  expandedPaths: string[];
+}
+
 /** Mirrors the Rust FsEntry enum */
 export type FsEntry =
   | { type: "dir"; name: string; path: string; children: FsEntry[] }
@@ -44,8 +51,7 @@ export interface PlaylistData {
 
 /** Mirrors the Rust AppSettings struct */
 export interface AppSettings {
-  root_dirs: string[];
-  expanded_paths: string[];
+  root_dirs: { path: string; expanded_paths: string[] }[];
   volume: number;
   play_mode: string;
   visible_columns: string[];

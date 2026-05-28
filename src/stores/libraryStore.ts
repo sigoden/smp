@@ -1,98 +1,141 @@
 import { create } from "zustand";
-import type { FsEntry } from "../types";
+import type { FsEntry, RootDir } from "../types";
 import { logger } from "../lib/logger";
 import { scanDirectory } from "../lib/utils";
 
 interface LibraryState {
-  rootDirs: string[];
-  treeData: FsEntry[];
+  rootDirs: RootDir[];
   searchQuery: string;
-  expandedPaths: Set<string>;
 
   // Actions
   addRootDir: (path: string) => Promise<void>;
   removeRootDir: (path: string) => void;
   setSearch: (query: string) => void;
   toggleExpand: (path: string) => void;
+  collapseAll: () => void;
   refreshDir: (path?: string) => Promise<void>;
   refreshAll: () => Promise<void>;
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
   rootDirs: [],
-  treeData: [],
   searchQuery: "",
-  expandedPaths: new Set<string>(),
 
   addRootDir: async (path: string) => {
-    const { rootDirs, refreshDir } = get();
-    if (rootDirs.includes(path)) return;
-    set({ rootDirs: [...rootDirs, path] });
-    await refreshDir(path);
+    const { rootDirs } = get();
+    if (rootDirs.some((r) => r.path === path)) return;
+    const entries = await scanDirectory(path);
+    set((state) => ({
+      rootDirs: [...state.rootDirs, { path, tree: entries, expandedPaths: [] }],
+    }));
   },
 
   removeRootDir: (path: string) => {
-    const { rootDirs, treeData } = get();
-    set({
-      rootDirs: rootDirs.filter((d) => d !== path),
-      treeData: treeData.filter((entry) => entry.path !== path),
-    });
+    set((state) => ({
+      rootDirs: state.rootDirs.filter((r) => r.path !== path),
+    }));
   },
 
   setSearch: (query: string) => {
     set({ searchQuery: query });
   },
 
+  collapseAll: () => {
+    set((state) => ({
+      rootDirs: state.rootDirs.map((r) => ({ ...r, expandedPaths: [] })),
+    }));
+  },
+
   toggleExpand: (path: string) => {
-    const expanded = new Set(get().expandedPaths);
-    if (expanded.has(path)) {
-      expanded.delete(path);
-    } else {
-      expanded.add(path);
-    }
-    set({ expandedPaths: expanded });
+    set((state) => ({
+      rootDirs: state.rootDirs.map((root) => {
+        if (
+          path !== root.path &&
+          !path.startsWith(root.path + "/") &&
+          !path.startsWith(root.path + "\\")
+        ) {
+          return root;
+        }
+        const relPath = path === root.path ? "/" : "/" + path.slice(root.path.length + 1).replace(/\\/g, "/");
+        const already = root.expandedPaths.includes(relPath);
+        return {
+          ...root,
+          expandedPaths: already
+            ? root.expandedPaths.filter((p) => p !== relPath)
+            : combineAndSortPaths(root.expandedPaths, relPath),
+        };
+      }),
+    }));
   },
 
   refreshDir: async (path?: string) => {
     try {
-      const targetPath = path || (get().rootDirs[0]);
+      const { rootDirs } = get();
+      const targetPath = path || rootDirs[0]?.path;
       if (!targetPath) return;
       const entries: FsEntry[] = await scanDirectory(targetPath);
-      const { treeData, rootDirs } = get();
 
-      // If refreshing a root dir or no specific path given, replace entire tree
-      if (!path || rootDirs.includes(path)) {
-        set({ treeData: entries });
-      } else {
-        // Update only the children of the matching node in-place
-        const updateChildren = (nodes: FsEntry[]): FsEntry[] =>
-          nodes.map((node) => {
-            if (node.type === "dir") {
-              if (node.path === path) {
-                return { ...node, children: entries };
+      set((state) => ({
+        rootDirs: state.rootDirs.map((root) => {
+          // Check if targetPath is under this root
+          if (
+            targetPath !== root.path &&
+            !targetPath.startsWith(root.path + "/") &&
+            !targetPath.startsWith(root.path + "\\")
+          ) {
+            return root;
+          }
+
+          // Target is the root itself — replace tree
+          if (targetPath === root.path) {
+            return { ...root, tree: entries };
+          }
+
+          // Target is a subdirectory — find and update its children
+          const updateChildren = (nodes: FsEntry[]): FsEntry[] =>
+            nodes.map((node) => {
+              if (node.type === "dir") {
+                if (node.path === targetPath) {
+                  return { ...node, children: entries };
+                }
+                return { ...node, children: updateChildren(node.children) };
               }
-              return { ...node, children: updateChildren(node.children) };
-            }
-            return node;
-          });
-        set({ treeData: updateChildren(treeData) });
-      }
+              return node;
+            });
+
+          return { ...root, tree: updateChildren(root.tree) };
+        }),
+      }));
     } catch (err) {
-      logger.error("library", `refreshDir failed: ${path ?? 'unknown'}`, err);
+      logger.error("library", `refreshDir failed: ${path ?? "unknown"}`, err);
     }
   },
 
   refreshAll: async () => {
     const { rootDirs } = get();
-    if (rootDirs.length === 0) {
-      set({ treeData: [] });
-      return;
-    }
+    if (rootDirs.length === 0) return;
     try {
-      const results = await Promise.all(rootDirs.map((dir) => scanDirectory(dir)));
-      set({ treeData: results.flat() });
+      const updated = await Promise.all(
+        rootDirs.map(async (root) => {
+          const entries = await scanDirectory(root.path);
+          return { ...root, tree: entries };
+        })
+      );
+      set({ rootDirs: updated });
     } catch (err) {
       logger.error("library", "refreshAll failed", err);
     }
   },
 }));
+
+
+function combineAndSortPaths(oldPaths: string[], path: string) {
+  const newPaths = [...oldPaths, path];
+  newPaths.sort((a, b) =>
+    a.localeCompare(b, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    })
+  );
+  return newPaths;
+}

@@ -63,7 +63,6 @@ export async function loadSettings(): Promise<AppSettings> {
     logger.warn("utils", "loadSettings failed, using defaults", err);
     return {
       root_dirs: [],
-      expanded_paths: [],
       volume: 0.8,
       play_mode: "sequential",
       visible_columns: DEFAULT_TRACK_COLUMNS,

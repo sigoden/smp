@@ -5,9 +5,14 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AppSettings {
-    pub root_dirs: Vec<String>,
+pub struct RootDirSetting {
+    pub path: String,
     pub expanded_paths: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppSettings {
+    pub root_dirs: Vec<RootDirSetting>,
     pub volume: f64,
     pub play_mode: String,
     pub visible_columns: Vec<String>,
@@ -21,7 +26,6 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             root_dirs: Vec::new(),
-            expanded_paths: Vec::new(),
             volume: 0.8,
             play_mode: "sequential".to_string(),
             visible_columns: vec![

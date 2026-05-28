@@ -36,8 +36,10 @@ function App() {
 
     const settings = {
       sidebar_width: ui.sidebarWidth,
-      root_dirs: library.rootDirs,
-      expanded_paths: Array.from(library.expandedPaths),
+      root_dirs: library.rootDirs.map((r) => ({
+        path: r.path,
+        expanded_paths: r.expandedPaths,
+      })),
       volume: player.volume,
       play_mode: player.playMode,
       visible_columns: ui.visibleColumns,
@@ -88,13 +90,15 @@ function App() {
 
         // Apply loaded settings to stores via setState to trigger proper reactivity
         if (settings.root_dirs.length > 0) {
-          useLibraryStore.setState({ rootDirs: settings.root_dirs });
-          // Refresh tree data for root dirs
-          useLibraryStore.getState().refreshAll();
-        }
-
-        if (settings.expanded_paths.length > 0) {
-          useLibraryStore.setState({ expandedPaths: new Set(settings.expanded_paths) });
+          useLibraryStore.setState({
+            rootDirs: settings.root_dirs.map((r) => ({
+              path: r.path,
+              tree: [],
+              expandedPaths: r.expanded_paths,
+            })),
+          });
+          // Scan each root dir to populate trees
+          await useLibraryStore.getState().refreshAll();
         }
 
         const playerStore = usePlayerStore.getState();

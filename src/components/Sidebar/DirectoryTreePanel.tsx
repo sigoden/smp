@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, RefreshCw, PlusCircle } from "lucide-react";
+import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, RefreshCw, PlusCircle, ChevronsUp } from "lucide-react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useLibraryStore } from "../../stores/libraryStore";
@@ -8,19 +8,73 @@ import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { useUIStore } from "../../stores/uiStore";
 import { cn, getTrack, loadTracksFromDir, openContainerFolder, revealInFileManager } from "../../lib/utils";
-import type { FsEntry } from "../../types";
+import type { FsEntry, RootDir } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
 import { ConfirmDialog } from "../ui/confirm-dialog";
 
+// ──── Helpers ────
+
+function findEnclosingRoot(rootDirs: RootDir[], entryPath: string): { root: RootDir; relPath: string } | undefined {
+  for (const root of rootDirs) {
+    if (entryPath === root.path) return { root, relPath: "/" };
+    if (entryPath.startsWith(root.path + "/") || entryPath.startsWith(root.path + "\\")) {
+      return { root, relPath: "/" + entryPath.slice(root.path.length + 1).replace(/\\/g, "/") };
+    }
+  }
+  return undefined;
+}
+
+function isEntryExpanded(rootDirs: RootDir[], entryPath: string): boolean {
+  const enclosing = findEnclosingRoot(rootDirs, entryPath);
+  return enclosing ? enclosing.root.expandedPaths.includes(enclosing.relPath) : false;
+}
+
+function filterRootDirs(rootDirs: RootDir[], query: string): RootDir[] {
+  if (!query) return rootDirs;
+  const q = query.toLowerCase();
+  return rootDirs.reduce<RootDir[]>((acc, root) => {
+    const filterEntries = (entries: FsEntry[]): FsEntry[] =>
+      entries.reduce<FsEntry[]>((acc2, entry) => {
+        if (entry.type === "dir") {
+          const filtered = filterEntries(entry.children);
+          if (filtered.length > 0 || entry.name.toLowerCase().includes(q)) {
+            acc2.push({ ...entry, children: filtered });
+          }
+        } else if (entry.name.toLowerCase().includes(q)) {
+          acc2.push(entry);
+        }
+        return acc2;
+      }, []);
+
+    const filteredTree = filterEntries(root.tree);
+    if (filteredTree.length > 0) {
+      acc.push({ ...root, tree: filteredTree });
+    } else {
+      // Keep root if its basename matches the query
+      const dirName = root.path.split(/[/\\]/).filter(Boolean).pop() || root.path;
+      if (dirName.toLowerCase().includes(q)) {
+        acc.push(root);
+      }
+    }
+    return acc;
+  }, []);
+}
+
+// ──── TreeNode ────
+
 function TreeNode({
   entry,
   depth = 0,
+  isRoot = false,
+  onRemoveRoot,
 }: {
   entry: FsEntry;
   depth?: number;
+  isRoot?: boolean;
+  onRemoveRoot?: (path: string) => void;
 }) {
-  const expandedPaths = useLibraryStore((s) => s.expandedPaths);
+  const rootDirs = useLibraryStore((s) => s.rootDirs);
   const toggleExpand = useLibraryStore((s) => s.toggleExpand);
   const loadQueue = usePlayerStore((s) => s.loadQueue);
   const appendAndPlay = usePlayerStore((s) => s.appendAndPlay);
@@ -36,12 +90,12 @@ function TreeNode({
   const setGlobalLoading = useUIStore((s) => s.setLoading);
   const [loading, setLocalLoading] = useState(false);
   const isDir = entry.type === "dir";
-  const isExpanded = isDir && expandedPaths.has(entry.path);
+  const isExpanded = isDir && isEntryExpanded(rootDirs, entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
 
   const handleClick = async () => {
     if (isDir) {
-      if (!isExpanded) {
+      if (!isExpanded && isRoot) {
         setLocalLoading(true);
         await refreshDir(entry.path);
         setLocalLoading(false);
@@ -101,10 +155,10 @@ function TreeNode({
           <div
             className={cn(
               "flex items-center gap-1.5 px-2 py-0.5 rounded text-sm cursor-pointer hover:bg-accent/50 select-none",
-              depth > 0 && "ml-4",
+              depth > 0 && "ml-2",
               isPlaying && "text-accent-foreground bg-accent/30"
             )}
-            style={{ paddingLeft: `${8 + depth * 16}px` }}
+            style={{ paddingLeft: `${(depth * 12) - 6}px` }}
             onClick={handleClick}
             onDoubleClick={isDir ? undefined : handleDoubleClick}
             title={entry.path}
@@ -158,6 +212,15 @@ function TreeNode({
                   <PlusCircle className="mr-2 h-3.5 w-3.5" />
                   Add to Queue
                 </ContextMenuItem>
+                {isRoot && (
+                  <>
+                    <ContextSeparator />
+                    <ContextMenuItem onClick={() => onRemoveRoot?.(entry.path)}>
+                      <X className="mr-2 h-3.5 w-3.5" />
+                      Remove Directory
+                    </ContextMenuItem>
+                  </>
+                )}
               </>
             )}
           </ContextMenuPrimitive.Content>
@@ -168,7 +231,7 @@ function TreeNode({
           {entry.children.length === 0 ? (
             <div
               className="text-xs text-muted-foreground italic px-2 py-0.5"
-              style={{ paddingLeft: `${8 + (depth + 1) * 16}px` }}
+              style={{ paddingLeft: `${(depth + 1) * 12}px` }}
             >
               Empty
             </div>
@@ -179,20 +242,22 @@ function TreeNode({
           )}
         </div>
       )}
-
     </div>
   );
 }
 
+// ──── Panel ────
+
 export function DirectoryTreePanel() {
   const rootDirs = useLibraryStore((s) => s.rootDirs);
-  const treeData = useLibraryStore((s) => s.treeData);
   const searchQuery = useLibraryStore((s) => s.searchQuery);
   const setSearch = useLibraryStore((s) => s.setSearch);
   const addRootDir = useLibraryStore((s) => s.addRootDir);
   const removeRootDir = useLibraryStore((s) => s.removeRootDir);
+  const collapseAll = useLibraryStore((s) => s.collapseAll);
   const refreshAll = useLibraryStore((s) => s.refreshAll);
   const [refreshing, setRefreshing] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
   const handleAddRoot = async () => {
     const selected = await open({
@@ -205,31 +270,13 @@ export function DirectoryTreePanel() {
     }
   };
 
-  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
-
   const handleRefresh = async () => {
     setRefreshing(true);
     await refreshAll();
     setRefreshing(false);
   };
 
-  const filterTree = (entries: FsEntry[]): FsEntry[] => {
-    if (!searchQuery) return entries;
-    const q = searchQuery.toLowerCase();
-    return entries.reduce<FsEntry[]>((acc, entry) => {
-      if (entry.type === "dir") {
-        const filtered = filterTree(entry.children);
-        if (filtered.length > 0 || entry.name.toLowerCase().includes(q)) {
-          acc.push({ ...entry, children: filtered });
-        }
-      } else if (entry.name.toLowerCase().includes(q)) {
-        acc.push(entry);
-      }
-      return acc;
-    }, []);
-  };
-
-  const filteredTree = filterTree(treeData);
+  const filteredRootDirs = filterRootDirs(rootDirs, searchQuery);
 
   return (
     <div className="flex flex-col h-full">
@@ -245,65 +292,64 @@ export function DirectoryTreePanel() {
         />
       </div>
 
-      {/* Root dir manager */}
-      <div className="px-2 py-1 border-b border-border">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium text-muted-foreground">Files</span>
-          <div className="flex items-center gap-0.5">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50"
-              title="Refresh"
-            >
-              {refreshing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <RotateCcw className="h-3.5 w-3.5" />
-              )}
-            </button>
-            <button
-              onClick={handleAddRoot}
-              className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
-              title="Add directory"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-          </div>
+      {/* Files header */}
+      <div className="flex items-center justify-between px-2 py-1 border-b border-border">
+        <span className="text-xs font-medium text-muted-foreground">Files</span>
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={collapseAll}
+            className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            title="Collapse all"
+          >
+            <ChevronsUp className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50"
+            title="Refresh"
+          >
+            {refreshing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RotateCcw className="h-3.5 w-3.5" />
+            )}
+          </button>
+          <button
+            onClick={handleAddRoot}
+            className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+            title="Add directory"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
         </div>
-        {rootDirs.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">No directories added</p>
-        ) : (
-          <div className="space-y-0.5">
-            {rootDirs.map((dir) => (
-              <div
-                key={dir}
-                className="flex items-center justify-between text-xs rounded px-1 py-0.5 hover:bg-accent/50 group"
-              >
-                <span className="truncate text-muted-foreground">{dir}</span>
-                <button
-                  onClick={() => setRemoveTarget(dir)}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive shrink-0"
-                  title="Remove directory"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Tree */}
       <div className="flex-1 overflow-auto">
-        {filteredTree.length === 0 ? (
+        {filteredRootDirs.length === 0 ? (
           <p className="text-xs text-muted-foreground italic px-3 py-2">
-            {searchQuery ? "No matching files" : "No files loaded"}
+            {searchQuery ? "No matching files" : rootDirs.length === 0 ? "No directories added" : "No files loaded"}
           </p>
         ) : (
-          filteredTree.map((entry, i) => (
-            <TreeNode key={`${entry.path}-${i}`} entry={entry} depth={0} />
-          ))
+          filteredRootDirs.map((root) => {
+            const dirName = root.path.split(/[/\\]/).filter(Boolean).pop() || root.path;
+            const rootNode: FsEntry = {
+              type: "dir",
+              name: dirName,
+              path: root.path,
+              children: root.tree,
+            };
+            return (
+              <TreeNode
+                key={root.path}
+                entry={rootNode}
+                depth={0}
+                isRoot={true}
+                onRemoveRoot={setRemoveTarget}
+              />
+            );
+          })
         )}
       </div>
 
@@ -319,11 +365,7 @@ export function DirectoryTreePanel() {
             setRemoveTarget(null);
           }
         }}
-      >
-        <div className="text-sm text-muted-foreground bg-muted rounded px-3 py-2 truncate mb-4">
-          {removeTarget}
-        </div>
-      </ConfirmDialog>
+      />
     </div>
   );
 }
