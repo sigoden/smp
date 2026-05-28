@@ -15,6 +15,7 @@ import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
+import { PlaylistNameDialog } from "../ui/playlist-name-dialog";
 
 export function PlaylistPanel() {
   const playlists = usePlaylistStore((s) => s.playlists);
@@ -29,8 +30,8 @@ export function PlaylistPanel() {
 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [renamingName, setRenamingName] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<string | null>(null);
 
   const handleCreate = async () => {
     const name = newName.trim();
@@ -40,12 +41,20 @@ export function PlaylistPanel() {
     setCreating(false);
   };
 
-  const handleRename = async (oldName: string) => {
-    const name = editName.trim();
-    if (!name) return;
-    await renamePlaylist(oldName, name);
-    setRenamingName(null);
-    setEditName("");
+  const handleRenameOpen = (name: string) => {
+    setRenameTarget(name);
+    setRenameDialogOpen(true);
+  };
+
+  const renameValidator = (name: string) =>
+    name && name !== renameTarget && playlists.some((p) => p.name === name)
+      ? `A playlist named "${name}" already exists`
+      : "";
+
+  const handleRenameSubmit = async (newName: string) => {
+    if (!renameTarget) return;
+    await renamePlaylist(renameTarget, newName);
+    setRenameTarget(null);
   };
 
   const handleClick = async (playlistName: string) => {
@@ -118,7 +127,6 @@ export function PlaylistPanel() {
         ) : (
           playlists.filter(pl => pl.name !== QUEUE_PLAYLIST_NAME).map((pl) => {
             const isActive = pl.name === activePlaylistName;
-            const isRenaming = pl.name === renamingName;
 
             return (
               <ContextMenuPrimitive.Root key={pl.name}>
@@ -131,73 +139,10 @@ export function PlaylistPanel() {
                     onClick={() => handleClick(pl.name)}
                   >
                     <ListMusic className="h-4 w-4 shrink-0 text-muted-foreground" />
-
-                    {isRenaming ? (
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRename(pl.name);
-                          if (e.key === "Escape") {
-                            setRenamingName(null);
-                            setEditName("");
-                          }
-                        }}
-                        autoFocus
-                        className="flex-1 h-6 rounded border border-input bg-background px-1 text-xs outline-none focus:border-ring"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <span className="flex-1 truncate text-sm">{pl.name}</span>
-                    )}
-
+                    <span className="flex-1 truncate text-sm">{pl.name}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">
                       {pl?.track_count ?? 0}
                     </span>
-
-                    {/* Action buttons — visible on hover or when active */}
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {isRenaming ? (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRename(pl.name);
-                            }}
-                            className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
-                            title="Confirm rename"
-                          >
-                            <Check className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRenamingName(null);
-                              setEditName("");
-                            }}
-                            className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
-                            title="Cancel rename"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRenamingName(pl.name);
-                              setEditName(pl.name);
-                            }}
-                            className="p-0.5 rounded hover:bg-accent-foreground/20 text-muted-foreground hover:text-foreground"
-                            title="Rename"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </button>
-                        </>
-                      )}
-                    </div>
                   </div>
                 </ContextMenuPrimitive.Trigger>
                 <ContextMenuPrimitive.Portal>
@@ -227,6 +172,13 @@ export function PlaylistPanel() {
                     </ContextMenuItem>
                     <ContextSeparator />
                     <ContextMenuItem
+                      onClick={() => handleRenameOpen(pl.name)}
+                    >
+                      <Pencil className="mr-2 h-3.5 w-3.5" />
+                      Rename
+                    </ContextMenuItem>
+                    <ContextSeparator />
+                    <ContextMenuItem
                       onClick={() => deletePlaylist(pl.name)}
                       danger
                     >
@@ -240,6 +192,19 @@ export function PlaylistPanel() {
           })
         )}
       </div>
+
+      <PlaylistNameDialog
+        open={renameDialogOpen}
+        onOpenChange={(open) => {
+          setRenameDialogOpen(open);
+          if (!open) setRenameTarget(null);
+        }}
+        title="Rename Playlist"
+        initialName={renameTarget ?? ""}
+        confirmLabel="Rename"
+        validate={renameValidator}
+        onSubmit={handleRenameSubmit}
+      />
     </div>
   );
 }

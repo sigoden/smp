@@ -198,6 +198,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     const playlist: PlaylistData = { name, tracks };
     await savePlaylist(playlist);
     setActivePlaylist(name);
+    useUIStore.getState().setTab("playlist");
   },
 
   saveActivePlaylist: async () => {

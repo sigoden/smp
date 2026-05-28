@@ -8,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../ui/popover";
+import { PlaylistNameDialog } from "../ui/playlist-name-dialog";
 import {
   Dialog,
   DialogTrigger,
@@ -25,7 +26,6 @@ import { createQueuePlaylist } from "../../lib/utils";
 
 export function TrackListHeader() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [newPlaylistName, setNewPlaylistName] = useState("");
 
   const playlists = usePlaylistStore((s) => s.playlists);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
@@ -44,10 +44,14 @@ export function TrackListHeader() {
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMN_KEYS;
   
-  const handleSaveAsNewPlaylist = () => {
-    setSaveDialogOpen(false);
-    saveQueueAsNewPlaylist(newPlaylistName.trim(), queue);
+  const handleSaveAsNewPlaylist = async (name: string) => {
+    await saveQueueAsNewPlaylist(name, queue);
   };
+
+  const saveValidator = (name: string) =>
+    name && playlists.some((p) => p.name === name)
+      ? `A playlist named "${name}" already exists`
+      : "";
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-border">
@@ -72,55 +76,21 @@ export function TrackListHeader() {
           <button
             className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
             title="Save queue as new playlist"
-            onClick={() => {
-              setNewPlaylistName("");
-              setSaveDialogOpen(true);
-            }}
+            onClick={() => setSaveDialogOpen(true)}
           >
             <Save className="h-4 w-4" />
           </button>
         ) : null}
 
-        {/* Save as new playlist dialog */}
-        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Save as Playlist</DialogTitle>
-              <DialogDescription>
-                Create a new playlist from the current queue ({queue.length}{" "}
-                tracks).
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <input
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Playlist name"
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    newPlaylistName.trim().length > 0
-                  ) {
-                    handleSaveAsNewPlaylist();
-                  }
-                }}
-              />
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button
-                disabled={newPlaylistName.trim().length === 0}
-                onClick={handleSaveAsNewPlaylist}
-              >
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <PlaylistNameDialog
+          open={saveDialogOpen}
+          onOpenChange={setSaveDialogOpen}
+          title="Save as Playlist"
+          description={`Create a new playlist from the current queue (${queue.length} tracks).`}
+          confirmLabel="Save"
+          validate={saveValidator}
+          onSubmit={handleSaveAsNewPlaylist}
+        />
 
         <Dialog>
           <DialogTrigger asChild>
