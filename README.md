@@ -26,30 +26,7 @@ Built with Tauri 2 · React 19 · TypeScript
 
 ## Getting Started
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) 20+
-- [Rust](https://www.rust-lang.org/) (latest stable)
-- System dependencies for [Tauri 2](https://v2.tauri.app/start/prerequisites/)
-
-### Install & Run
-
-```bash
-git clone https://github.com/sigoden/smp.git
-cd smp
-npm install
-npm run tauri:dev
-```
-
-Starts Vite dev server on `http://localhost:1420` with hot-reload for both frontend and Rust backend.
-
-### Build Production
-
-```bash
-npm run tauri:build
-```
-
-Produces an installer in `src-tauri/target/release/bundle/`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, setup, and development instructions.
 
 ---
 
@@ -79,75 +56,6 @@ Produces an installer in `src-tauri/target/release/bundle/`.
 | Play a playlist | **Double-click** the playlist name |
 | Delete / Rename | Right-click the playlist → context menu |
 | Open playlists folder | Right-click the playlist panel → **Open Playlists Folder** |
-
-### Tag Editing
-
-Right-click any track → **Edit Tags** to modify title, artist, or album metadata.
-
----
-
-## Tech Stack
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Desktop shell | [Tauri 2](https://v2.tauri.app/) (Rust) | Native window, system tray, file system access |
-| Frontend | [React 19](https://react.dev/) + TypeScript | UI components and state |
-| Build tool | [Vite 6](https://vite.dev/) | Fast HMR and bundling |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com/) | Utility-first CSS via `@tailwindcss/vite` |
-| UI primitives | [Radix UI](https://www.radix-ui.com/) | Accessible dialog, menu, slider, tabs, tooltip |
-| State management | [Zustand 5](https://github.com/pmndrs/zustand) | Lightweight reactive store |
-| Icons | [lucide-react](https://lucide.dev/) | Consistent icon set |
-| Audio metadata | [`lofty`](https://crates.io/crates/lofty) (Rust) | Read/write ID3 tags |
-| File scanning | [`walkdir`](https://crates.io/crates/walkdir) (Rust) | Recursive directory traversal |
-| Plugin dialogs | [`tauri-plugin-dialog`](https://v2.tauri.app/plugin/dialog/) | Native file picker |
-
----
-
-## Project Structure
-
-```
-smp/
-├── src-tauri/                # Rust backend
-│   ├── src/
-│   │   ├── commands.rs       # Tauri IPC command handlers
-│   │   ├── scanner.rs        # Directory scan and audio file filtering
-│   │   ├── metadata.rs       # Audio tag reading/writing
-│   │   ├── playlist.rs       # M3U8 playlist I/O
-│   │   └── settings.rs       # JSON settings persistence
-│   └── tauri.conf.json       # Window config, permissions, build settings
-├── src/                      # React frontend
-│   ├── App.tsx               # Root layout, audio setup, settings auto-save
-│   ├── types/index.ts        # Shared TypeScript types
-│   ├── lib/
-│   │   ├── audio.ts          # HTML audio element wrapper
-│   │   ├── constants.ts      # Column definitions, queue name constant
-│   │   └── utils.ts          # cn() helper, IPC wrappers
-│   ├── stores/               # Zustand stores (player, library, playlist, UI)
-│   └── components/           # React components
-│       ├── ui/               # shadcn-style primitives
-│       ├── Sidebar/          # Directory tree and playlist panels
-│       ├── TrackList/        # Track table, context menu, tag editor
-│       └── Player/           # Player bar, controls, progress, volume
-└── package.json              # Scripts and dependencies
-```
-
----
-
-## Development
-
-```bash
-# Check types
-npx tsc -b --noEmit
-
-# Lint
-npm run lint
-
-# Build frontend standalone
-npm run build
-
-# Build Rust backend standalone
-cd src-tauri && cargo build
-```
 
 ---
 
