@@ -119,7 +119,6 @@ pub(crate) fn sanitize_filename(name: &str) -> String {
 /// Each returned playlist has an empty `tracks` vector and a `track_count`
 /// computed by counting non-comment, non-empty lines in the .m3u8 file.
 pub fn list_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
-    log::info!("list_playlists");
     let dir = playlists_dir(app)?;
     let mut playlists = Vec::new();
 
@@ -159,7 +158,6 @@ pub fn list_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
     }
 
     playlists.sort_by_key(|a| a.name.to_lowercase());
-    log::info!("list_playlists: found {} playlists", playlists.len());
     Ok(playlists)
 }
 
@@ -167,7 +165,6 @@ pub fn list_playlists(app: &AppHandle) -> Result<Vec<Playlist>, String> {
 /// Reads the .m3u8 file, parses EXTINF metadata, then validates
 /// each track: checks file existence and re-reads audio duration.
 pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntry>, String> {
-    log::info!("load_playlist_tracks: {}", name);
     let dir = playlists_dir(app)?;
     let filename = sanitize_filename(name);
     let path = dir.join(format!("{}.m3u8", filename));
@@ -197,12 +194,10 @@ pub fn load_playlist_tracks(app: &AppHandle, name: &str) -> Result<Vec<TrackEntr
         }
     }
 
-    log::info!("load_playlist_tracks: {} loaded {} tracks", name, playlist.tracks.len());
     Ok(playlist.tracks)
 }
 
 pub fn save_playlist(app: &AppHandle, playlist: &Playlist) -> Result<(), String> {
-    log::info!("save_playlist: {} ({} tracks)", playlist.name, playlist.tracks.len());
     let dir = playlists_dir(app)?;
     let filename = sanitize_filename(&playlist.name);
     let path = dir.join(format!("{}.m3u8", filename));
@@ -212,7 +207,6 @@ pub fn save_playlist(app: &AppHandle, playlist: &Playlist) -> Result<(), String>
 }
 
 pub fn delete_playlist(app: &AppHandle, name: &str) -> Result<(), String> {
-    log::info!("delete_playlist: {}", name);
     let dir = playlists_dir(app)?;
     let filename = sanitize_filename(name);
     let path = dir.join(format!("{}.m3u8", filename));
@@ -223,7 +217,6 @@ pub fn delete_playlist(app: &AppHandle, name: &str) -> Result<(), String> {
 }
 
 pub fn rename_playlist(app: &AppHandle, old_name: &str, new_name: &str) -> Result<(), String> {
-    log::info!("rename_playlist: {} -> {}", old_name, new_name);
     let dir = playlists_dir(app)?;
     let old_filename = sanitize_filename(old_name);
     let new_filename = sanitize_filename(new_name);

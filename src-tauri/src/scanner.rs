@@ -33,7 +33,6 @@ fn is_audio_file(path: &Path) -> bool {
 }
 
 pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
-    log::info!("scan_directory: {}", path);
     let path = Path::new(path);
     if !path.is_dir() {
         return Err(format!("Not a directory: {}", path.display()));
@@ -78,7 +77,6 @@ pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
         }
     }
 
-    log::info!("scan_directory: {} found {} entries", path.display(), entries.len());
     // Sort: directories first, then files, alphabetically
     entries.sort_by(|a, b| {
         let a_is_dir = matches!(a, FsEntry::Dir(_));
@@ -103,7 +101,6 @@ pub fn scan_directory(path: &str) -> Result<Vec<FsEntry>, String> {
 
 /// Returns all audio files recursively from a directory (flat list)
 pub fn collect_audio_files(path: &str) -> Result<Vec<String>, String> {
-    log::info!("collect_audio_files: {}", path);
     let path = Path::new(path);
     if !path.is_dir() {
         return Err(format!("Not a directory: {}", path.display()));
@@ -118,7 +115,6 @@ pub fn collect_audio_files(path: &str) -> Result<Vec<String>, String> {
 
     // Sort alphabetically
     files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
-    log::info!("collect_audio_files: {} found {} files", path.display(), files.len());
 
     Ok(files)
 }

@@ -20,7 +20,6 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
 
     let file = match read_from_path(path) {
         Ok(f) => {
-            log::info!("read_metadata: {} OK", file_path);
             f
         }
         Err(_) => {
@@ -68,7 +67,6 @@ pub fn write_metadata(
 ) -> Result<(), String> {
     use lofty::config::WriteOptions;
     use lofty::file::TaggedFileExt;
-    log::info!("write_metadata: {}", file_path);
 
     let path = std::path::Path::new(file_path);
     let mut tagged_file = read_from_path(path).map_err(|e| format!("Failed to read file: {}", e))?;

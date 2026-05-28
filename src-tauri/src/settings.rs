@@ -46,11 +46,10 @@ fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 pub fn load_settings(app: &AppHandle) -> AppSettings {
-    log::info!("load_settings");
     let path = match settings_path(app) {
         Ok(p) => p,
         Err(e) => {
-            log::warn!("Failed to get settings path: {}", e);
+            log::error!("Failed to get settings path: {}", e);
             return AppSettings::default();
         }
     };
@@ -63,19 +62,18 @@ pub fn load_settings(app: &AppHandle) -> AppSettings {
         Ok(content) => match serde_json::from_str::<AppSettings>(&content) {
             Ok(settings) => settings,
             Err(e) => {
-                log::warn!("Failed to parse settings, using defaults: {}", e);
+                log::error!("Failed to parse settings, using defaults: {}", e);
                 AppSettings::default()
             }
         },
         Err(e) => {
-            log::warn!("Failed to read settings file: {}", e);
+            log::error!("Failed to read settings file: {}", e);
             AppSettings::default()
         }
     }
 }
 
 pub fn save_settings(app: &AppHandle, settings: &AppSettings) -> Result<(), String> {
-    log::info!("save_settings");
     let path = settings_path(app)?;
     let content =
         serde_json::to_string_pretty(settings).map_err(|e| format!("Failed to serialize settings: {}", e))?;

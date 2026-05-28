@@ -1,5 +1,5 @@
 mod commands;
-mod log_writer;
+mod logger;
 mod metadata;
 mod playlist;
 mod scanner;
@@ -11,6 +11,7 @@ use tauri::{
     Emitter, Listener, Manager,
 };
 use tauri_plugin_log::{Target, TargetKind};
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -25,10 +26,9 @@ pub fn run() {
                     let _ = window.set_focus();
                 });
         }))
-        .setup(|app| {
-            app.handle().plugin(
+        .plugin(
                 tauri_plugin_log::Builder::new()
-                    .level(log::LevelFilter::Info)
+                    .level(logger::retrieve_log_level())
                     .targets([
                         Target::new(TargetKind::Stdout),
                         Target::new(TargetKind::LogDir {
@@ -45,7 +45,11 @@ pub fn run() {
                         ))
                     })
                     .build(),
-            )?;
+        )
+        .setup(|app| {
+            logger::clear_logs_on_start(app.handle());
+
+            log::info!("Application started");
 
             // Build tray menu
             let play_pause = MenuItemBuilder::with_id("play_pause", "Play").build(app)?;
@@ -122,10 +126,11 @@ pub fn run() {
 
             // Listen for log entries from frontend
             let app_handle = app.handle().clone();
+            let log_level = logger::retrieve_log_level();
             app.listen("log-entry", move |event| {
                 let payload = event.payload();
-                if let Ok(entry) = serde_json::from_str::<log_writer::LogEntry>(payload) {
-                    let _ = log_writer::write_log_entry(&app_handle, &entry);
+                if let Ok(entry) = serde_json::from_str::<logger::LogEntry>(payload) {
+                    let _ = logger::write_log_entry(&app_handle, &entry, log_level);
                 }
             });
             Ok(())
