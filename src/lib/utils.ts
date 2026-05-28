@@ -153,7 +153,7 @@ export async function getTrack(path: string): Promise<Track> {
   try {
     metadata = await readMetadata(path);
   } catch (err) {
-    logger.error("DirectoryTreePanel", `Failed to load metadata for '${path}'`, err);
+    logger.error("utils", `Failed to load metadata for '${path}'`, err);
   }
   return mapMetadataToTrack(path, metadata);
 }
@@ -166,7 +166,7 @@ export function mapMetadataToTrack(
   return {
     path,
     metadata: metadata ?? {
-      title: undefined,
+      title: null,
       artist: null,
       album: null,
       duration_ms: null,
@@ -182,7 +182,7 @@ export function mapMetadataToTrack(
 
 /** Convenience accessors for Track (flatten metadata fields) */
 export function trackTitle(track: Track): string {
-  return track.metadata.title ?? track.path.split(/[/\\]/).pop() ?? "??";
+  return track.metadata.title ?? getBasenameWithoutExt(track.path);
 }
 export function trackArtist(track: Track): string {
   return track.metadata.artist ?? "";
@@ -193,4 +193,18 @@ export function trackAlbum(track: Track): string {
 export function trackDuration(track: Track): number {
   return track.duration_ms / 1000;
 }
+export function trackFilename(track: Track): string {
+  return (track.path || "").split(/[/\\]/).pop() || track.path;
+}
 
+export function getBasenameWithoutExt(path: string) {
+    if (typeof path !== "string" || path.length === 0) {
+        return "";
+    }
+    const basenameWithExt = path.replace(/[\\/]+/g, "/").split("/").pop() || path;
+    const lastDotIndex = basenameWithExt.lastIndexOf(".");
+    if (lastDotIndex <= 0) {
+        return basenameWithExt;
+    }
+    return basenameWithExt.substring(0, lastDotIndex);
+}

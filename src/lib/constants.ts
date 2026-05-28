@@ -3,7 +3,6 @@ import type { TrackColumn } from "../types";
 export const QUEUE_PLAYLIST_NAME = "PLAYING";
 
 export const ALL_TRACK_COLUMNS: TrackColumn[] = [
-  "filename",
   "title",
   "artist",
   "album",
@@ -12,18 +11,18 @@ export const ALL_TRACK_COLUMNS: TrackColumn[] = [
   "genre",
   "year",
   "duration",
+  "filename",
 ];
 
 export const DEFAULT_TRACK_COLUMNS: TrackColumn[] = [
-  "filename",
   "title",
   "artist",
   "album",
   "duration",
+  "filename",
 ];
 
 export const TRACK_COLUMN_LABELS: Record<TrackColumn, string> = {
-  filename: "Filename",
   title: "Title",
   artist: "Artist",
   album: "Album",
@@ -32,5 +31,6 @@ export const TRACK_COLUMN_LABELS: Record<TrackColumn, string> = {
   genre: "Genre",
   album_artist: "Album Artist",
   year: "Year",
+  filename: "Filename",
 };
 

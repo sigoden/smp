@@ -9,13 +9,13 @@ import {
   trackArtist,
   trackAlbum,
   trackDuration,
+  trackFilename,
 } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import type { Track, TrackColumn } from "../../types";
 import { DEFAULT_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
 
 const columnWidths: Record<TrackColumn, string> = {
-  filename: "minmax(180px, 1.5fr)",
   title: "minmax(180px, 1fr)",
   artist: "minmax(140px, 1fr)",
   album: "minmax(140px, 1fr)",
@@ -24,6 +24,7 @@ const columnWidths: Record<TrackColumn, string> = {
   genre: "minmax(100px, 1fr)",
   album_artist: "minmax(140px, 1fr)",
   year: "minmax(50px, 70px)",
+  filename: "minmax(200px, 1fr)",
 };
 
 function formatDuration(seconds: number): string {
@@ -58,7 +59,6 @@ function TrackRow({
   };
 
   const cellValues: Record<TrackColumn, string> = {
-    filename: track.path.split(/[/\\]/).pop() || track.path,
     title: trackTitle(track),
     artist: trackArtist(track),
     album: trackAlbum(track),
@@ -67,6 +67,7 @@ function TrackRow({
     genre: track.metadata.genre ?? "",
     album_artist: track.metadata.album_artist ?? "",
     year: track.metadata.year?.toString() ?? "",
+    filename: trackFilename(track),
   };
 
   return (
@@ -77,7 +78,7 @@ function TrackRow({
       <div
         ref={rowRef}
         className={cn(
-          "grid items-center px-4 py-1.5 text-sm cursor-pointer border-b border-border/50 hover:bg-accent/30 transition-colors",
+          "grid items-center gap-x-3 px-4 py-1.5 text-sm cursor-pointer border-b border-border/50 hover:bg-accent/30 transition-colors",
           isPlaying && "bg-accent/40 text-accent-foreground hover:bg-accent/50",
           track.invalid && "opacity-50"
         )}
@@ -122,7 +123,7 @@ export function TrackTable() {
     <div className="flex flex-col h-full">
       {/* Column headers */}
       <div
-        className="grid items-center px-4 py-1.5 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30"
+        className="grid items-center gap-x-3 px-4 py-1.5 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30"
         style={{
           gridTemplateColumns: orderedColumns
             .map((c) => columnWidths[c])
@@ -143,7 +144,7 @@ export function TrackTable() {
       </div>
 
       {/* Rows */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
         {tracks.length === 0 ? (
           <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
             {activePlaylist.name !== QUEUE_PLAYLIST_NAME ? "Playlist is empty" : "No tracks loaded"}

@@ -5,7 +5,7 @@ export type FsEntry =
 
 /** Track metadata from Rust backend */
 export interface TrackMetadata {
-  title?: string;
+  title: string | null;
   artist: string | null;
   album: string | null;
   duration_ms: number | null;
@@ -31,15 +31,15 @@ export type SidebarTab = "tree" | "playlist";
 
 /** Visible columns in the track table */
 export type TrackColumn =
-  "filename"
-  | "title"
+  "title"
   | "artist"
   | "album"
   | "album_artist"
   | "track_number"
   | "genre"
   | "year"
-  | "duration";
+  | "duration"
+  | "filename";
 
 /** Playlist from Rust backend */
 export interface PlaylistData {
