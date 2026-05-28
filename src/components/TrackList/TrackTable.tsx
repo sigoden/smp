@@ -14,19 +14,7 @@ import {
 } from "../../lib/utils";
 import { TrackContextMenu } from "./TrackContextMenu";
 import type { Track, TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
-
-const columnWidths: Record<TrackColumn, string> = {
-  title: "minmax(180px, 1fr)",
-  artist: "minmax(140px, 1fr)",
-  album: "minmax(140px, 1fr)",
-  duration: "minmax(60px, 80px)",
-  track_number: "minmax(40px, 60px)",
-  genre: "minmax(100px, 1fr)",
-  album_artist: "minmax(140px, 1fr)",
-  year: "minmax(50px, 70px)",
-  filename: "minmax(200px, 1fr)",
-};
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, ALL_TRACK_COLUMN_KEYS } from "../../lib/constants";
 
 
 function TrackRow({
@@ -79,7 +67,7 @@ function TrackRow({
         )}
         style={{
           gridTemplateColumns: columns
-            .map((c) => columnWidths[c])
+            .map((c) => ALL_TRACK_COLUMNS[c].width)
             .join(" "),
         }}
         onDoubleClick={handleDoubleClick}
@@ -103,8 +91,8 @@ function TrackRow({
 
 export function TrackTable() {
   const visibleColumns = useUIStore((s) => s.visibleColumns);
-  // Always render columns in the fixed order defined by ALL_TRACK_COLUMNS
-  const orderedColumns = ALL_TRACK_COLUMNS.filter((c) => visibleColumns.includes(c));
+  // Always render columns in the fixed order defined by ALL_TRACK_COLUMN_KEYS
+  const orderedColumns = ALL_TRACK_COLUMN_KEYS.filter((c) => visibleColumns.includes(c));
   const tracks = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
@@ -116,32 +104,33 @@ export function TrackTable() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Column headers */}
-      <div
-        className="grid items-center gap-x-3 px-4 py-1.5 text-xs font-medium text-muted-foreground border-b border-border bg-muted/30"
-        style={{
-          gridTemplateColumns: orderedColumns
-            .map((c) => columnWidths[c])
-            .join(" "),
-        }}
-      >
-        {orderedColumns.map((col) => (
-          <span
-            key={col}
-            className={cn(
-              "truncate uppercase tracking-wider",
-              col === "duration" && "text-right"
-            )}
-          >
-            {TRACK_COLUMN_LABELS[col]}
-          </span>
-        ))}
-      </div>
-
-      {/* Rows */}
+      {/* Scrollable container with sticky header — header & rows share the same width */}
       <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+        {/* Column headers — sticky inside scroll container */}
+        <div
+          className="sticky top-0 z-10 grid items-center gap-x-3 px-4 py-1.5 text-xs font-medium text-muted-foreground border-b border-border bg-muted"
+          style={{
+            gridTemplateColumns: orderedColumns
+              .map((c) => ALL_TRACK_COLUMNS[c].width)
+              .join(" "),
+          }}
+        >
+          {orderedColumns.map((col) => (
+            <span
+              key={col}
+              className={cn(
+                "truncate uppercase tracking-wider",
+                col === "duration" && "text-right"
+              )}
+            >
+              {ALL_TRACK_COLUMNS[col].label}
+            </span>
+          ))}
+        </div>
+
+        {/* Rows */}
         {tracks.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
             {activePlaylist.name !== QUEUE_PLAYLIST_NAME ? "Playlist is empty" : "No tracks loaded"}
           </div>
         ) : (
@@ -158,7 +147,6 @@ export function TrackTable() {
           ))
         )}
       </div>
-
     </div>
   );
 }

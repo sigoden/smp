@@ -1,3 +1,5 @@
+import type { ALL_TRACK_COLUMNS } from "../lib/constants";
+
 /** Mirrors the Rust FsEntry enum */
 export type FsEntry =
   | { type: "dir"; name: string; path: string; children: FsEntry[] }
@@ -30,16 +32,7 @@ export type PlayMode = "sequential" | "repeat-one" | "shuffle";
 export type SidebarTab = "tree" | "playlist";
 
 /** Visible columns in the track table */
-export type TrackColumn =
-  "title"
-  | "artist"
-  | "album"
-  | "album_artist"
-  | "track_number"
-  | "genre"
-  | "year"
-  | "duration"
-  | "filename";
+export type TrackColumn = keyof typeof ALL_TRACK_COLUMNS;
 
 /** Playlist from Rust backend */
 export interface PlaylistData {

@@ -20,7 +20,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import type { TrackColumn } from "../../types";
-import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, TRACK_COLUMN_LABELS } from "../../lib/constants";
+import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, ALL_TRACK_COLUMN_KEYS } from "../../lib/constants";
 import { createQueuePlaylist } from "../../lib/utils";
 
 export function TrackListHeader() {
@@ -42,7 +42,7 @@ export function TrackListHeader() {
   const activePlaylist =
     playlists.find((p) => p.name === activePlaylistName) || createQueuePlaylist();
 
-  const allColumns: TrackColumn[] = ALL_TRACK_COLUMNS;
+  const allColumns: TrackColumn[] = ALL_TRACK_COLUMN_KEYS;
   
   const handleSaveAsNewPlaylist = () => {
     setSaveDialogOpen(false);
@@ -178,7 +178,7 @@ export function TrackListHeader() {
                     onChange={() => toggleColumn(col)}
                     className="accent-primary"
                   />
-                  {TRACK_COLUMN_LABELS[col]}
+                  {ALL_TRACK_COLUMNS[col].label}
                 </label>
               ))}
             </div>
