@@ -55,7 +55,7 @@ pub fn run() {
             // Build tray menu
             let play_pause = MenuItemBuilder::with_id("play_pause", "Play").build(app)?;
             let next = MenuItemBuilder::with_id("next", "Next").build(app)?;
-            let prev = MenuItemBuilder::with_id("prev", "Previous").build(app)?;
+            let prev = MenuItemBuilder::with_id("prev", "Prev").build(app)?;
             let quit = PredefinedMenuItem::quit(app, Some("Quit"))?;
 
             let menu = MenuBuilder::new(app)
