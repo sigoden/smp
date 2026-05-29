@@ -30,3 +30,4 @@ image = { version = "0.25.6", features = ["png"] }
 chrono = "0.4.44"
 rayon = "1.10"
 natord = "1.0.9"
+opener = { version = "0.8.4", features = ["reveal"] }

@@ -9,8 +9,8 @@ import {
   FolderOpen,
   Play,
 } from "lucide-react";
-import { openPlaylistsDir, cn } from "../../lib/utils";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
+import { openPlaylist, cn } from "../../lib/utils";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
@@ -161,10 +161,10 @@ export function PlaylistPanel() {
                     alignOffset={-4}
                   >
                     <ContextMenuItem
-                      onClick={() => openPlaylistsDir()}
+                      onClick={() => openPlaylist(pl.name)}
                     >
                       <FolderOpen className="mr-2 h-3.5 w-3.5" />
-                      Open Containing Folder
+                      Open File
                     </ContextMenuItem>
                     <ContextSeparator />
                     <ContextMenuItem

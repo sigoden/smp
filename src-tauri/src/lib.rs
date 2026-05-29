@@ -154,7 +154,7 @@ pub fn run() {
             commands::delete_playlist,
             commands::rename_playlist,
             commands::reveal_in_file_manager,
-            commands::open_playlists_dir,
+            commands::open_playlist,
             commands::load_persisted_state,
             commands::save_persisted_state,
         ])

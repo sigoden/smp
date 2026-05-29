@@ -104,81 +104,19 @@ pub fn save_persisted_state(app: AppHandle, state: PersistedState) -> Result<(),
     )
 }
 
-/// Resolve the target directory and whether the original path was a file.
-/// Shared by all platform-specific `reveal_in_file_manager` implementations.
-fn resolve_reveal_target(path: &str) -> (std::path::PathBuf, bool) {
-    let p = std::path::Path::new(path);
-    let is_file = p.is_file();
-    let dir = if is_file {
-        p.parent()
-            .map(|d| d.to_path_buf())
-            .unwrap_or_else(|| p.to_path_buf())
-    } else {
-        p.to_path_buf()
-    };
-    (dir, is_file)
-}
-
-#[cfg(target_os = "windows")]
 #[command]
 pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
-    log_cmd_err(
-        (|| {
-            let (dir, is_file) = resolve_reveal_target(&path);
-            let arg = if is_file {
-                format!("/select,{}", path)
-            } else {
-                dir.to_string_lossy().to_string()
-            };
-            std::process::Command::new("explorer")
-                .arg(&arg)
-                .spawn()
-                .map_err(|e| format!("Failed to open explorer: {}", e))?;
-            Ok(())
-        })(),
-        format!("reveal_in_file_manager({path})"),
-    )
-}
-
-#[cfg(target_os = "macos")]
-#[command]
-pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
-    log_cmd_err(
-        (|| {
-            let (dir, _) = resolve_reveal_target(&path);
-            std::process::Command::new("open")
-                .arg(&dir)
-                .spawn()
-                .map_err(|e| format!("Failed to open finder: {}", e))?;
-            Ok(())
-        })(),
-        format!("reveal_in_file_manager({path})"),
-    )
-}
-
-#[cfg(target_os = "linux")]
-#[command]
-pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
-    log_cmd_err(
-        (|| {
-            let (dir, _) = resolve_reveal_target(&path);
-            std::process::Command::new("xdg-open")
-                .arg(&dir)
-                .spawn()
-                .map_err(|e| format!("Failed to open file manager: {}", e))?;
-            Ok(())
-        })(),
-        format!("reveal_in_file_manager({path})"),
-    )
+    opener::reveal(&path).map_err(|e| format!("Failed to open file manager for '{path}': {e}"))
 }
 
 #[command]
-pub fn open_playlists_dir(app: AppHandle) -> Result<(), String> {
+pub fn open_playlist(app: AppHandle, name: String) -> Result<(), String> {
     log_cmd_err(
         (|| {
             let playlists_dir = crate::playlist::playlists_dir(&app)?;
-            reveal_in_file_manager(playlists_dir.to_string_lossy().to_string())
+            let playlist_path = playlists_dir.join(format!("{}.m3u8", name));
+            opener::reveal(&playlist_path).map_err(|e| format!("Failed to open playlist '{name}': {e}"))
         })(),
-        "open_playlists_dir".to_string(),
+        format!("open_playlist({})", name),
     )
 }

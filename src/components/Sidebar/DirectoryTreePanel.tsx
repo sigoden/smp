@@ -7,7 +7,7 @@ import { useLibraryStore } from "../../stores/libraryStore";
 import { usePlayerStore } from "../../stores/playerStore";
 import { usePlaylistStore } from "../../stores/playlistStore";
 import { useUIStore } from "../../stores/uiStore";
-import { cn, getTrack, loadTracksFromDir, openContainerFolder, revealInFileManager } from "../../lib/utils";
+import { cn, getTrack, loadTracksFromDir, revealInFileManager } from "../../lib/utils";
 import type { FsEntry, RootDir } from "../../types";
 import { QUEUE_PLAYLIST_NAME } from "../../lib/constants";
 import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
@@ -204,15 +204,9 @@ function TreeNode({
             className="z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
             alignOffset={-4}
           >
-            <ContextMenuItem
-              onClick={() =>
-                isDir
-                  ? revealInFileManager(entry.path)
-                  : openContainerFolder(entry.path)
-              }
-            >
+            <ContextMenuItem onClick={() => revealInFileManager(entry.path)}>
               <FolderOpen className="mr-2 h-3.5 w-3.5" />
-              {isDir ? "Open Folder" : "Open Containing Folder"}
+              {isDir ? "Open Folder" : "Open File"}
             </ContextMenuItem>
             <ContextSeparator />
             {entry.type === "file" ? (

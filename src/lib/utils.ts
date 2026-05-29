@@ -31,7 +31,20 @@ export function createQueuePlaylist(): PlaylistData {
 
 /** Open a path in the system file manager */
 export async function revealInFileManager(path: string): Promise<void> {
-  await invoke("reveal_in_file_manager", { path });
+  try {
+    await invoke("reveal_in_file_manager", { path });
+  } catch (err) {
+    logger.error("utils", `revealInFileManager failed for path: ${path}`, err);
+  }
+}
+
+/** Open the playlists directory in the system file manager */
+export async function openPlaylist(name: string): Promise<void> {
+  try {
+    await invoke("open_playlist", { name });
+  } catch(err) {
+    logger.error("utils", `openPlay failed for playlist: ${name}`, err);
+  }
 }
 
 /** List audio files in a directory */
@@ -117,23 +130,9 @@ export async function deletePlaylist(name: string): Promise<void> {
   await invoke("delete_playlist", { name });
 }
 
-/** Open the playlists directory in the system file manager */
-export async function openPlaylistsDir(): Promise<void> {
-  await invoke("open_playlists_dir");
-}
-
 // ─────────────────────────────────────────────
 //  Higher-level utilities (use wrappers above)
 // ─────────────────────────────────────────────
-
-/** Open the containing folder of a file/directory path in the system file manager */
-export async function openContainerFolder(filePath: string): Promise<void> {
-  // Strip trailing separator, then extract parent directory
-  const normalized = filePath.replace(/[/\\]$/, '');
-  const lastSep = Math.max(normalized.lastIndexOf('/'), normalized.lastIndexOf('\\'));
-  const dirPath = lastSep > 0 ? normalized.substring(0, lastSep) : normalized;
-  await revealInFileManager(dirPath);
-}
 
 /** Load all audio files from a directory and return track list */
 export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
