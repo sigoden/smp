@@ -129,7 +129,7 @@ function App() {
         }
         playerStore.loadQueue(resolvedTracks, startIndex);
       } catch (err) {
-        logger.error("app", "init failed", err);
+        logger.error("init failed", err);
       }
     };
 

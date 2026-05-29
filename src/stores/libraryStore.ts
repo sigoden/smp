@@ -124,7 +124,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
         }),
       }));
     } catch (err) {
-      logger.error("library", `refreshDir failed: ${path ?? "unknown"}`, err);
+      logger.error(`refreshDir failed: ${path ?? "unknown"}`, err);
     }
   },
 
@@ -140,7 +140,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       );
       set({ rootDirs: updated });
     } catch (err) {
-      logger.error("library", "refreshAll failed", err);
+      logger.error("refreshAll failed", err);
     }
   },
 }));

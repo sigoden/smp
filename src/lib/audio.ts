@@ -37,7 +37,7 @@ export function setCallbacks(cbs: AudioCallbacks) {
 }
 
 export function loadTrack(filePath: string) {
-  logger.info("audio", `loadTrack: ${filePath}`);
+  logger.info(`loadTrack: ${filePath}`);
   const audio = getAudio();
   const src = convertFileSrc(filePath);
   audio.src = src;
@@ -47,7 +47,7 @@ export function loadTrack(filePath: string) {
 export function play() {
   const audio = getAudio();
   audio.play().catch((err) => {
-    logger.error("audio", "play failed", err);
+    logger.error("play failed", err);
   });
 }
 

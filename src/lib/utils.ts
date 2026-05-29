@@ -34,7 +34,7 @@ export async function revealInFileManager(path: string): Promise<void> {
   try {
     await invoke("reveal_in_file_manager", { path });
   } catch (err) {
-    logger.error("utils", `revealInFileManager failed for path: ${path}`, err);
+    logger.error(`revealInFileManager failed for path: ${path}`, err);
   }
 }
 
@@ -43,7 +43,7 @@ export async function openPlaylist(name: string): Promise<void> {
   try {
     await invoke("open_playlist", { name });
   } catch(err) {
-    logger.error("utils", `openPlay failed for playlist: ${name}`, err);
+    logger.error(`openPlay failed for playlist: ${name}`, err);
   }
 }
 
@@ -74,7 +74,7 @@ export async function loadPersistedState(): Promise<PersistedState> {
   try {
     return await invoke<PersistedState>("load_persisted_state");
   } catch (err) {
-    logger.warn("utils", "loadPersistedState failed, using defaults", err);
+    logger.warn("loadPersistedState failed, using defaults", err);
     return {
       root_dirs: [],
       enqueued_paths: [],
@@ -94,7 +94,7 @@ export async function savePersistedState(state: PersistedState): Promise<void> {
   try {
     await invoke("save_persisted_state", { state });
   } catch (err) {
-    logger.error("utils", "savePersistedState failed", err);
+    logger.error("savePersistedState failed", err);
   }
 }
 
@@ -115,7 +115,7 @@ export async function savePlaylist(playlist: PlaylistData): Promise<void> {
   try {
     await invoke("save_playlist", { playlist });
   } catch (err) {
-    logger.error("utils", "savePlaylist failed", err);
+    logger.error("savePlaylist failed", err);
     throw err;
   }
 }
@@ -142,7 +142,7 @@ export async function loadTracksFromDir(dirPath: string): Promise<Track[]> {
     const metadata: TrackMetadata[] = await getMetadataBatch(files);
     return files.map((path, i) => mapMetadataToTrack(path, metadata[i]));
   } catch (err) {
-    logger.error("utils", "loadTracksFromDir failed", err);
+    logger.error("loadTracksFromDir failed", err);
     return [];
   }
 };
@@ -153,7 +153,7 @@ export async function getTrack(path: string): Promise<Track> {
   try {
     metadata = await readMetadata(path);
   } catch (err) {
-    logger.error("utils", `Failed to load metadata for '${path}'`, err);
+    logger.error(`Failed to load metadata for '${path}'`, err);
   }
   return mapMetadataToTrack(path, metadata);
 }

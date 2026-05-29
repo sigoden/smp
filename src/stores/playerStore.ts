@@ -230,7 +230,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const { queue, setTrack } = get();
     const idx = queue.findIndex((t) => t.path === track.path);
     if (idx === -1) {
-      logger.error("player", `Unable to play track, Track '${track.path}' is not in queue`);
+      logger.error(`Unable to play track, Track '${track.path}' is not in queue`);
       return;
     }
     setTrack(queue, idx, true);

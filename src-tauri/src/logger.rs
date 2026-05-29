@@ -8,7 +8,6 @@ use tauri::Manager;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogEntry {
     pub level: String,
-    pub module: String,
     pub message: String,
     pub timestamp: String,
 }
@@ -58,8 +57,8 @@ pub fn write_log_entry(
 
     writeln!(
         file,
-        "{} {} [{}] {}",
-        entry.timestamp, entry.level, entry.module, entry.message
+        "{} {} [UI] {}",
+        entry.timestamp, entry.level, entry.message
     )
     .map_err(|e| format!("Failed to write log entry: {}", e))?;
 
