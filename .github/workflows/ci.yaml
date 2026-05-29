@@ -63,6 +63,8 @@ jobs:
 
       - name: Clippy (Rust lint)
         run: cargo clippy --all-targets -- -D warnings
+        working-directory: src-tauri
 
       - name: Build (Rust check)
         run: cargo build --locked
+        working-directory: src-tauri
