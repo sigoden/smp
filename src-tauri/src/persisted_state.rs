@@ -11,6 +11,7 @@ pub struct PersistedRootDir {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PersistedState {
     pub root_dirs: Vec<PersistedRootDir>,
     pub enqueued_paths: Vec<String>,
@@ -37,11 +38,10 @@ impl Default for PersistedState {
                 "artist".to_string(),
                 "album".to_string(),
                 "duration".to_string(),
-                "filename".to_string(),
             ],
             sidebar_tab: "tree".to_string(),
-            active_playlist_name: None,
             sidebar_width: 256,
+            active_playlist_name: None,
             track_index: -1,
         }
     }
