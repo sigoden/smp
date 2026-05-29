@@ -40,9 +40,9 @@ smp/
 │       ├── scanner.rs        # Directory scan and audio file filtering
 │       ├── metadata.rs       # Audio tag reading/writing via `lofty`
 │       ├── playlist.rs       # M3U8 playlist CRUD in app data dir
-│       └── settings.rs       # JSON settings persistence
+│       └── persisted_state.rs # JSON persisted state persistence
 ├── src/                      # React frontend
-│   ├── App.tsx               # Root layout, audio setup, settings auto-save
+│   ├── App.tsx               # Root layout, audio setup, state auto-save
 │   ├── main.tsx              # React entry point
 │   ├── types/index.ts        # Shared TypeScript types
 │   ├── lib/

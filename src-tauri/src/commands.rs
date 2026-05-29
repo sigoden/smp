@@ -2,7 +2,7 @@ use crate::logger::log_cmd_err;
 use crate::metadata::TrackMetadata;
 use crate::playlist::{Playlist, TrackEntry};
 use crate::scanner::FsEntry;
-use crate::settings::AppSettings;
+use crate::persisted_state::PersistedState;
 
 use rayon::prelude::*;
 use tauri::command;
@@ -92,15 +92,15 @@ pub fn rename_playlist(app: AppHandle, old_name: String, new_name: String) -> Re
 }
 
 #[command]
-pub fn load_settings(app: AppHandle) -> AppSettings {
-    crate::settings::load_settings(&app)
+pub fn load_persisted_state(app: AppHandle) -> PersistedState {
+    crate::persisted_state::load_persisted_state(&app)
 }
 
 #[command]
-pub fn save_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
+pub fn save_persisted_state(app: AppHandle, state: PersistedState) -> Result<(), String> {
     log_cmd_err(
-        crate::settings::save_settings(&app, &settings),
-        "save_settings".to_string(),
+        crate::persisted_state::save_persisted_state(&app, &state),
+        "save_persisted_state".to_string(),
     )
 }
 

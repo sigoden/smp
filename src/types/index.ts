@@ -50,8 +50,8 @@ export interface PlaylistData {
   isDirty?: boolean;
 }
 
-/** Mirrors the Rust AppSettings struct */
-export interface AppSettings {
+/** Mirrors the Rust PersistedState struct */
+export interface PersistedState {
   root_dirs: { path: string; expanded_paths: string[] }[];
   enqueued_paths: string[];
   volume: number;

@@ -3,7 +3,8 @@ mod logger;
 mod metadata;
 mod playlist;
 mod scanner;
-mod settings;
+mod persisted_state;
+
 use tauri::{
     image::Image,
     menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem},
@@ -154,8 +155,8 @@ pub fn run() {
             commands::rename_playlist,
             commands::reveal_in_file_manager,
             commands::open_playlists_dir,
-            commands::load_settings,
-            commands::save_settings,
+            commands::load_persisted_state,
+            commands::save_persisted_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

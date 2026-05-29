@@ -15,7 +15,7 @@ import { usePlayerStore } from "./stores/playerStore";
 import { usePlaylistStore } from "./stores/playlistStore";
 import { useLibraryStore } from "./stores/libraryStore";
 import { setCallbacks } from "./lib/audio";
-import { loadSettings, saveSettings, trackTitle, trackArtist } from "./lib/utils";
+import { loadPersistedState, savePersistedState, trackTitle, trackArtist } from "./lib/utils";
 import type { PlayMode, SidebarTab, TrackColumn } from "./types";
 
 function App() {
@@ -34,7 +34,7 @@ function App() {
     const ui = useUIStore.getState();
     const playlist = usePlaylistStore.getState();
 
-    const settings = {
+    const persistedState = {
       root_dirs: library.rootDirs.map((r) => ({
         path: r.path,
         expanded_paths: r.expandedPaths,
@@ -50,11 +50,11 @@ function App() {
     };
 
     // Serialized dirty check: skip IPC if nothing relevant changed
-    const json = JSON.stringify(settings);
+    const json = JSON.stringify(persistedState);
     if (json === lastSavedJsonRef.current) return;
     lastSavedJsonRef.current = json;
 
-    saveSettings(settings);
+    savePersistedState(persistedState);
   };
 
   const scheduleSave = useCallback(() => {
@@ -83,16 +83,16 @@ function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        const settings = await loadSettings();
+        const persistedState = await loadPersistedState();
 
         // Apply sidebar width — sync both Zustand and the CSS variable
-        useUIStore.setState({ sidebarWidth: settings.sidebar_width });
-        document.documentElement.style.setProperty("--sidebar-width", `${settings.sidebar_width}px`);
+        useUIStore.setState({ sidebarWidth: persistedState.sidebar_width });
+        document.documentElement.style.setProperty("--sidebar-width", `${persistedState.sidebar_width}px`);
 
-        // Apply loaded settings to stores via setState to trigger proper reactivity
-        if (settings.root_dirs.length > 0) {
+        // Apply loaded persisted state to stores via setState to trigger proper reactivity
+        if (persistedState.root_dirs.length > 0) {
           useLibraryStore.setState({
-            rootDirs: settings.root_dirs.map((r) => ({
+            rootDirs: persistedState.root_dirs.map((r) => ({
               path: r.path,
               tree: [],
               expandedPaths: r.expanded_paths,
@@ -103,12 +103,12 @@ function App() {
         }
 
         const playerStore = usePlayerStore.getState();
-        playerStore.setVolume(settings.volume);
-        playerStore.setPlayMode(settings.play_mode as PlayMode);
+        playerStore.setVolume(persistedState.volume);
+        playerStore.setPlayMode(persistedState.play_mode as PlayMode);
 
         useUIStore.setState({
-          sidebarTab: settings.sidebar_tab as SidebarTab,
-          visibleColumns: settings.visible_columns as TrackColumn[],
+          sidebarTab: persistedState.sidebar_tab as SidebarTab,
+          visibleColumns: persistedState.visible_columns as TrackColumn[],
         });
 
         const playlistsStore = usePlaylistStore.getState();
@@ -116,16 +116,16 @@ function App() {
         // Load playlists from disk (lightweight — no tracks yet)
         await playlistsStore.loadPlaylists();
 
-        playlistsStore.setActivePlaylist(settings.active_playlist_name);
+        playlistsStore.setActivePlaylist(persistedState.active_playlist_name);
 
         // Restore enqueued paths (setActivePlaylist above may have cleared them)
-        usePlayerStore.setState({ enqueuedPaths: settings.enqueued_paths || [] });
+        usePlayerStore.setState({ enqueuedPaths: persistedState.enqueued_paths || [] });
 
         // Fetch tracks for the active playlist and load into queue
         const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(playlistsStore.activePlaylistName);
         let startIndex: number | undefined;
-        if (settings.track_index >= 0 && settings.track_index < resolvedTracks.length) {
-          startIndex = settings.track_index;
+        if (persistedState.track_index >= 0 && persistedState.track_index < resolvedTracks.length) {
+          startIndex = persistedState.track_index;
         } else if (resolvedTracks.length > 0) {
           startIndex = 0;
         }

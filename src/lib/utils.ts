@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { FsEntry, AppSettings, PlaylistData, Track, TrackMetadata } from "../types";
+import type { FsEntry, PersistedState, PlaylistData, Track, TrackMetadata } from "../types";
 import { DEFAULT_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME } from "./constants";
 import { logger } from "./logger";
 import { invoke } from "@tauri-apps/api/core";
@@ -54,14 +54,14 @@ export async function scanDirectory(path: string): Promise<FsEntry[]> {
   return await invoke("scan_directory", { path });
 }
 
-// ──── Settings ────
+// ──── Persisted State ────
 
-/** Load app settings from disk, returns defaults if no saved settings exist */
-export async function loadSettings(): Promise<AppSettings> {
+/** Load persisted state from disk, returns defaults if no saved state exists */
+export async function loadPersistedState(): Promise<PersistedState> {
   try {
-    return await invoke<AppSettings>("load_settings");
+    return await invoke<PersistedState>("load_persisted_state");
   } catch (err) {
-    logger.warn("utils", "loadSettings failed, using defaults", err);
+    logger.warn("utils", "loadPersistedState failed, using defaults", err);
     return {
       root_dirs: [],
       enqueued_paths: [],
@@ -76,12 +76,12 @@ export async function loadSettings(): Promise<AppSettings> {
   }
 }
 
-/** Save app settings to disk */
-export async function saveSettings(settings: AppSettings): Promise<void> {
+/** Save persisted state to disk */
+export async function savePersistedState(state: PersistedState): Promise<void> {
   try {
-    await invoke("save_settings", { settings });
+    await invoke("save_persisted_state", { state });
   } catch (err) {
-    logger.error("utils", "saveSettings failed", err);
+    logger.error("utils", "savePersistedState failed", err);
   }
 }
 

@@ -5,14 +5,14 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RootDirSetting {
+pub struct PersistedRootDir {
     pub path: String,
     pub expanded_paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AppSettings {
-    pub root_dirs: Vec<RootDirSetting>,
+pub struct PersistedState {
+    pub root_dirs: Vec<PersistedRootDir>,
     pub enqueued_paths: Vec<String>,
     pub volume: f64,
     pub play_mode: String,
@@ -23,7 +23,7 @@ pub struct AppSettings {
     pub track_index: i32,
 }
 
-impl Default for AppSettings {
+impl Default for PersistedState {
     fn default() -> Self {
         Self {
             root_dirs: Vec::new(),
@@ -45,44 +45,44 @@ impl Default for AppSettings {
     }
 }
 
-fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
+fn persisted_state_path(app: &AppHandle) -> Result<PathBuf, String> {
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&app_dir).map_err(|e| format!("Failed to create app data dir: {}", e))?;
-    Ok(app_dir.join("settings.json"))
+    Ok(app_dir.join("persisted-state.json"))
 }
 
-pub fn load_settings(app: &AppHandle) -> AppSettings {
-    let path = match settings_path(app) {
+pub fn load_persisted_state(app: &AppHandle) -> PersistedState {
+    let path = match persisted_state_path(app) {
         Ok(p) => p,
         Err(e) => {
-            log::error!("Failed to get settings path: {}", e);
-            return AppSettings::default();
+            log::error!("Failed to get persisted state path: {}", e);
+            return PersistedState::default();
         }
     };
 
     if !path.exists() {
-        return AppSettings::default();
+        return PersistedState::default();
     }
 
     match fs::read_to_string(&path) {
-        Ok(content) => match serde_json::from_str::<AppSettings>(&content) {
-            Ok(settings) => settings,
+        Ok(content) => match serde_json::from_str::<PersistedState>(&content) {
+            Ok(state) => state,
             Err(e) => {
-                log::error!("Failed to parse settings, using defaults: {}", e);
-                AppSettings::default()
+                log::error!("Failed to parse persisted state, using defaults: {}", e);
+                PersistedState::default()
             }
         },
         Err(e) => {
-            log::error!("Failed to read settings file: {}", e);
-            AppSettings::default()
+            log::error!("Failed to read persisted state file: {}", e);
+            PersistedState::default()
         }
     }
 }
 
-pub fn save_settings(app: &AppHandle, settings: &AppSettings) -> Result<(), String> {
-    let path = settings_path(app)?;
-    let content = serde_json::to_string_pretty(settings)
-        .map_err(|e| format!("Failed to serialize settings: {}", e))?;
-    fs::write(&path, content).map_err(|e| format!("Failed to write settings: {}", e))?;
+pub fn save_persisted_state(app: &AppHandle, state: &PersistedState) -> Result<(), String> {
+    let path = persisted_state_path(app)?;
+    let content = serde_json::to_string_pretty(state)
+        .map_err(|e| format!("Failed to serialize persisted state: {}", e))?;
+    fs::write(&path, content).map_err(|e| format!("Failed to write persisted state: {}", e))?;
     Ok(())
 }
