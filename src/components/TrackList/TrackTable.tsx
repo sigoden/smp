@@ -62,7 +62,7 @@ function TrackRow({
         ref={rowRef}
         className={cn(
           "grid items-center gap-x-3 px-4 py-1.5 text-sm cursor-pointer border-b border-border/50 hover:bg-accent/30 transition-colors",
-          isPlaying && "bg-accent/40 text-accent-foreground hover:bg-accent/50",
+          isPlaying && "bg-primary/10 text-primary font-medium",
           track.invalid && "opacity-50"
         )}
         style={{
@@ -77,8 +77,7 @@ function TrackRow({
             key={col}
             className={cn(
               "truncate",
-              col === "duration" && "tabular-nums text-right",
-              isPlaying && col === "title" && "font-medium"
+              col === "duration" && "tabular-nums text-right"
             )}
           >
             {cellValues[col]}
