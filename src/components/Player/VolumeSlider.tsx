@@ -1,13 +1,13 @@
-import { useState } from "react";
 import { VolumeX, Volume2 } from "lucide-react";
 import { usePlayerStore } from "../../stores/playerStore";
 import { Slider } from "../ui/slider";
 
 export function VolumeSlider() {
   const volume = usePlayerStore((s) => s.volume);
+  const prevVolume = usePlayerStore((s) => s.prevVolume);
   const setVolume = usePlayerStore((s) => s.setVolume);
+  const setPrevVolume = usePlayerStore((s) => s.setPrevVolume);
   const muted = volume === 0;
-  const [prevVolume, setPrevVolume] = useState(volume);
   const handleIconClick = () => {
 
     if (muted) {

@@ -79,6 +79,7 @@ export async function loadPersistedState(): Promise<PersistedState> {
       root_dirs: [],
       enqueued_paths: [],
       volume: 0.8,
+      prev_volume: 0.8,
       play_mode: "sequential",
       visible_columns: DEFAULT_TRACK_COLUMNS,
       sidebar_tab: "tree",

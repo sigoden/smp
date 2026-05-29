@@ -55,6 +55,7 @@ export interface PersistedState {
   root_dirs: { path: string; expanded_paths: string[] }[];
   enqueued_paths: string[];
   volume: number;
+  prev_volume: number;
   play_mode: string;
   visible_columns: string[];
   sidebar_tab: string;

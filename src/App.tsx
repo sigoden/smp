@@ -41,6 +41,7 @@ function App() {
       })),
       enqueued_paths: library.enqueuedPaths,
       volume: player.volume,
+      prev_volume: player.prevVolume,
       play_mode: player.playMode,
       visible_columns: ui.visibleColumns,
       sidebar_tab: ui.sidebarTab,
@@ -105,6 +106,7 @@ function App() {
 
         const playerStore = usePlayerStore.getState();
         playerStore.setVolume(persistedState.volume);
+        playerStore.setPrevVolume(persistedState.prev_volume);
         playerStore.setPlayMode(persistedState.play_mode as PlayMode);
 
         useUIStore.setState({
@@ -182,6 +184,72 @@ function App() {
       unsubPlaylist();
     };
   }, [scheduleSave]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const isInputFocused = (): boolean => {
+      const tag = document.activeElement?.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.ctrlKey || e.metaKey;
+      const store = usePlayerStore.getState();
+
+      // Ctrl+K / Cmd+K: Focus library search (always works)
+      if (e.key === "k" && isMod) {
+        e.preventDefault();
+        useUIStore.getState().setTab("tree");
+        document.getElementById("library-search")?.focus();
+        return;
+      }
+
+      // Ctrl+S / Cmd+S: Toggle shuffle (always works)
+      if (e.key === "s" && isMod) {
+        e.preventDefault();
+        store.setPlayMode(store.playMode === "shuffle" ? "sequential" : "shuffle");
+        return;
+      }
+
+      // Ctrl+R / Cmd+R: Toggle repeat-one (always works)
+      if (e.key === "r" && isMod) {
+        e.preventDefault();
+        store.setPlayMode(store.playMode === "repeat-one" ? "sequential" : "repeat-one");
+        return;
+      }
+
+      // Skip remaining shortcuts when typing in inputs
+      if (isInputFocused()) return;
+
+      switch (e.key) {
+        case " ":
+          e.preventDefault();
+          if (store.playing) store.pause();
+          else store.play();
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          store.prev();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          store.next();
+          break;
+        case "m":
+        case "M":
+          if (store.volume === 0) {
+            store.setVolume(store.prevVolume);
+          } else {
+            store.setPrevVolume(store.volume);
+            store.setVolume(0);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Update tray tooltip when playingTrack changes
   const playingTrack = usePlayerStore((s) => s.playingTrack);

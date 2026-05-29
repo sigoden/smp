@@ -14,6 +14,7 @@ interface PlayerState {
   position: number;
   duration: number;
   volume: number;
+  prevVolume: number;
   playMode: PlayMode;
 
   // Actions
@@ -29,6 +30,7 @@ interface PlayerState {
   prev: () => void;
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
+  setPrevVolume: (vol: number) => void;
   setPlayMode: (mode: PlayMode) => void;
   setPosition: (pos: number) => void;
   setDuration: (dur: number) => void;
@@ -76,6 +78,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playingTrack: null,
   playing: false,
   volume: 0.8,
+  prevVolume: 0.8,
   position: 0,
   duration: 0,
   playMode: "sequential",
@@ -210,6 +213,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setVolume: (volume: number) => {
     audio.setVolume(volume);
     set({ volume });
+  },
+
+  setPrevVolume: (vol: number) => {
+    set({ prevVolume: vol });
   },
 
   setPlayMode: (mode: PlayMode) => {

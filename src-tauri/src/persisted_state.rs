@@ -15,6 +15,7 @@ pub struct PersistedState {
     pub root_dirs: Vec<PersistedRootDir>,
     pub enqueued_paths: Vec<String>,
     pub volume: f64,
+    pub prev_volume: f64,
     pub play_mode: String,
     pub visible_columns: Vec<String>,
     pub sidebar_tab: String,
@@ -29,6 +30,7 @@ impl Default for PersistedState {
             root_dirs: Vec::new(),
             enqueued_paths: Vec::new(),
             volume: 0.8,
+            prev_volume: 0.0,
             play_mode: "sequential".to_string(),
             visible_columns: vec![
                 "title".to_string(),
