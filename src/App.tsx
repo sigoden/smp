@@ -36,10 +36,10 @@ function App() {
               className="flex flex-col h-full"
             >
               <div className="flex-1 px-2 py-2 overflow-hidden">
-                <TabsContent value="tree" className="mt-0 data-[state=active]:flex flex-col h-full">
+                <TabsContent value="tree" className="mt-0 data-[state=active]:flex flex-col h-full" tabIndex={-1}>
                   <DirectoryTreePanel />
                 </TabsContent>
-                <TabsContent value="playlist" className="mt-0 data-[state=active]:flex flex-col h-full">
+                <TabsContent value="playlist" className="mt-0 data-[state=active]:flex flex-col h-full" tabIndex={-1}>
                   <PlaylistPanel />
                 </TabsContent>
               </div>
