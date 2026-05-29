@@ -1,10 +1,10 @@
 # Contributing to smp
 
-## Prerequisites
+## Build locally
 
-- [Node.js](https://nodejs.org/) 20+
-- [Rust](https://www.rust-lang.org/) (latest stable)
-- System dependencies for [Tauri 2](https://v2.tauri.app/start/prerequisites/)
+1. Set up the [Tauri](https://tauri.app/) framework and it's [prerequisites](https://tauri.app/start/prerequisites/) depending on your platform
+2. Run `npm install` (using Node version 22+)
+3. You can then create a development build using `npm run tauri:build`.
 
 ## Tech Stack
 
@@ -67,7 +67,7 @@ smp/
 - **Error handling**: Rust commands return `Result<T, String>`. Frontend catches and logs errors.
 - **No network**: No fetch/XHR at runtime. All data comes from local filesystem via Tauri IPC.
 - **Playlist format**: M3U8 playlists stored in app data directory. Queue is a special playlist named `PLAYING`.
-- **TypeScript**: Strict mode. `noUnusedLocals`, `noUnusedParameters` enabled. Use `verbatimModuleSyntax`.
+- **TypeScript**: Strict mode.
 
 ## License
 

@@ -1,64 +1,79 @@
-# smp — Simple Music Player
+<div align="center">
 
-A lightweight, local-first music player for your desktop.
-Built with Tauri 2 · React 19 · TypeScript
+  # Simple Music Player
 
----
+  **A local-first music player for desktop.**  
+  Plays your audio files. No accounts, no streaming, no ads — just your music.
 
-**Simple Music Player (smp)** is a no-nonsense music player that plays your local audio files. No accounts, no streaming, no ads — just your music library, organized the way you have it on disk.
+  <p>
+    <a href="https://tauri.app/"><img src="https://img.shields.io/badge/Tauri_2-gray?style=flat-square&logo=tauri&logoColor=white" alt="Tauri 2"></a>
+    <a href="https://react.dev/"><img src="https://img.shields.io/badge/React_19-gray?style=flat-square&logo=react&logoColor=white" alt="React 19"></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript_6-gray?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 6"></a>
+    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_4-gray?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind 4"></a>
+    <a href="https://zustand.docs.pmnd.rs/"><img src="https://img.shields.io/badge/Zustand-gray?style=flat-square&logo=&logoColor=white" alt="Zustand"></a>
+    <br>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blueviolet?style=flat-square" alt="License"></a>
+    <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen?style=flat-square" alt="Contributions welcome"></a>
+  </p>
+</div>
+
+## Overview
+
+SimpleMusicPlayer gives you a clean, lightweight interface for your local music library. Point it at your music folders, browse by directory tree, build playlists automatically, and play — no internet required.
 
 ---
 
 ## Features
 
-- **Local-first** — Plays audio files from your file system. Zero network requests at runtime.
-- **Directory tree browser** — Navigate your music folders, double-click to play, right-click for context actions.
-- **Playlist management** — Create, rename, delete playlists. M3U8 format for easy portability.
-- **Queue system** — Replace or append tracks to the queue from any context.
-- **Play modes** — Sequential, Repeat One, and Shuffle (no consecutive repeats).
-- **Customizable columns** — Choose which columns to show in the track table.
-- **Settings persistence** — Volume, play mode, window layout, and active playlist are saved across sessions.
-- **System tray** — Minimize to tray, control playback from the tray menu, and surface the window with a click.
-- **Loading indicators** — Visual feedback during async directory scans and playlist operations.
-- **Lazy-loaded playlists** — Playlist metadata loads instantly; track data loads on demand.
+<details open>
+<summary><b>🎵 Playback</b></summary>
 
----
+- Play single tracks, folders, or entire playlists
+- **Sequential**, **Repeat One**, and **Shuffle** play modes (shuffle guarantees no consecutive repeats)
+- Persistent volume and play mode across sessions
+- System tray integration — minimize to tray, control playback from tray menu, surface with a click
+- Global tray menu controls: Play/Pause, Next, Previous
 
-## Getting Started
+</details>
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, setup, and development instructions.
+<details open>
+<summary><b>📂 Library Management</b></summary>
 
----
+- **Directory tree browser** — navigate your music folders as they appear on disk
+- Add multiple root folders; each is scanned recursively for audio files
+- Search within your library with real-time filtering
+- Track metadata display: title, artist, album, duration, file name
+- Edit tags (title/artist/album) directly from the UI
 
-## Usage
+</details>
 
-### Adding Music
+<details open>
+<summary><b>📋 Playlists</b></summary>
 
-1. Click the **Files** tab in the sidebar.
-2. Click **Add Folder** to select a directory containing your audio files.
-3. The directory tree populates with your folders and audio files.
+- Create, rename, and delete playlists
+- Add tracks to playlists from any context (tree, table, queue)
+- **M3U8 format** — portable and compatible with other players
+- Lazy-loaded tracks — playlist metadata loads instantly, track data loads on demand
+- Queue system — replace or append tracks without interrupting playback
+- Save any queue as a new playlist
 
-### Playing Tracks
+</details>
 
-| Action | How |
-|--------|-----|
-| Play a single track | **Double-click** on any track in the tree or track table |
-| Play all tracks in a folder | Right-click a folder → **Replace Queue** |
-| Add tracks without interrupting playback | Right-click → **Add to Queue** |
-| Control playback | Use the **player bar** at the bottom or the **system tray** icon |
+<details open>
+<summary><b>⚡ Performance & UX</b></summary>
 
-### Playlists
+- Fast async directory scanning with parallel metadata reads (via Rust's `rayon`)
+- Loading indicators for long-running operations
+- Configurable columns in the track table
+- Resizable sidebar
+- State persistence — window layout, volume, play mode, active playlist all restored on restart
 
-| Action | How |
-|--------|-----|
-| Create a playlist | Switch to the **Playlists** tab → **New Playlist** |
-| Add tracks to a playlist | Right-click a track → **Add to Playlist** |
-| Play a playlist | **Double-click** the playlist name |
-| Delete / Rename | Right-click the playlist → context menu |
-| Open playlists folder | Right-click the playlist panel → **Open Playlists Folder** |
+</details>
 
----
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup and contributing guidelines.
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
