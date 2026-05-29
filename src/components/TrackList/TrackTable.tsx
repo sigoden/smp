@@ -75,6 +75,7 @@ function TrackRow({
         {columns.map((col) => (
           <span
             key={col}
+            title={cellValues[col]}
             className={cn(
               "truncate",
               col === "duration" && "tabular-nums text-right"
