@@ -10,9 +10,9 @@ interface PlayerState {
   queue: Track[];
   currentIndex: number;
   playing: boolean;
-  volume: number;
   position: number;
   duration: number;
+  volume: number;
   playMode: PlayMode;
   nowPlaying: Track | null;
 
@@ -20,6 +20,8 @@ interface PlayerState {
   loadQueue: (tracks: Track[], index?: number) => void;
   appendToQueue: (tracks: Track[]) => void;
   pushQueueAndPlay: (track: Track) => void;
+  removeFromQueue: (trackPath: string) => void;
+  clearQueue: () => void;
   play: () => void;
   pause: () => void;
   stop: () => void;
@@ -31,7 +33,7 @@ interface PlayerState {
   setPosition: (pos: number) => void;
   setDuration: (dur: number) => void;
   playTrack: (track: Track) => Promise<void>;
-  clearQueue: () => void;
+  setTrack: (queue: Track[], index: number,  playing: boolean) => void;
 }
 
 function getNextIndex(
@@ -71,18 +73,18 @@ function getPrevIndex(
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
   currentIndex: -1,
+  nowPlaying: null,
   playing: false,
   volume: 0.8,
   position: 0,
   duration: 0,
   playMode: "sequential",
-  nowPlaying: null,
 
   loadQueue: (tracks, startIndex) => {
-    if (tracks.length === 0)  return;
+    if (tracks.length === 0) return;
     audio.pause();
     audio.stop();
-    const { playMode } = get();
+    const { playMode, setTrack } = get();
     let currentIndex = 0;
     if (startIndex !== undefined) {
       if (startIndex >= 0 && startIndex < tracks.length) {
@@ -91,57 +93,73 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     } else if (playMode === "shuffle") {
       currentIndex = Math.floor(Math.random() * tracks.length);
     }
-    const track = tracks[currentIndex];
-    set({
-      queue: tracks,
-      currentIndex: currentIndex,
-      position: 0,
-      duration: 0,
-      playing: false,
-      nowPlaying: track,
-    });
-
-    audio.loadTrack(track.path);
+    setTrack(tracks, currentIndex, false);
   },
 
   appendToQueue: (tracks: Track[]) => {
     if (tracks.length === 0) return;
-    const { queue, currentIndex, playMode } = get();
+    const { queue, playMode, setTrack, playing } = get();
     const existingPaths = new Set(queue.map((t) => t.path));
     const newTracks = tracks.filter((t) => !existingPaths.has(t.path));
 
     if (newTracks.length === 0) return;
 
     const newQueue = [...queue, ...newTracks];
-    let newIndex = currentIndex;
     if (queue.length === 0) {
-      newIndex = playMode === "shuffle" ? Math.floor(Math.random() * newQueue.length) : 0;
+      const newIndex = playMode === "shuffle" ? Math.floor(Math.random() * newQueue.length) : 0;
+      setTrack(newQueue, newIndex, playing);
+    } else {
+      set({
+        queue: newQueue,
+      });
     }
-    set({
-      queue: newQueue,
-      currentIndex: newIndex,
-    });
   },
 
   pushQueueAndPlay: (track: Track) => {
-    const { queue } = get();
-
+    const { queue, setTrack } = get();
     let newQueue = queue;
-    let index = queue.findIndex((t) => t.path === track.path);
-    if (index === - 1) {
+    let newIndex = queue.findIndex((t) => t.path === track.path);
+    if (newIndex === - 1) {
       newQueue = [...queue, track];
-      index = newQueue.length - 1;
+      newIndex = newQueue.length - 1;
     }
-    audio.loadTrack(track.path);
+    setTrack(newQueue, newIndex, true);
+  },
+
+  removeFromQueue: (trackPath: string) => {
+    const { queue, currentIndex, playMode, clearQueue, setTrack } = get();
+    const removeIdx = queue.findIndex((t) => t.path === trackPath);
+    if (removeIdx === -1) return;
+
+    const newQueue = queue.filter((t) => t.path !== trackPath);
+
+    if (removeIdx < currentIndex) {
+      // Removed a track before the current one — shift index down
+      set({ queue: [...newQueue], currentIndex: currentIndex - 1 });
+    } else if (removeIdx === currentIndex) {
+      // Removed the currently playing track
+      if (newQueue.length === 0) {
+        clearQueue();
+      } else {
+        const newIndex = playMode === "shuffle" ? Math.floor(Math.random() * newQueue.length) : Math.min(currentIndex, newQueue.length - 1);
+        setTrack([...newQueue], newIndex, false);
+      }
+    } else {
+      // Removed after current — index unchanged
+      set({ queue: [...newQueue] });
+    }
+  },
+
+  clearQueue: () => {
+    audio.pause();
+    audio.stop();
     set({
-      queue: newQueue,
-      currentIndex: index,
-      nowPlaying: track,
+      queue: [],
+      currentIndex: -1,
+      playing: false,
       position: 0,
-      duration: track.duration_ms / 1000,
-      playing: true,
+      nowPlaying: null,
     });
-    audio.play();
   },
 
   play: () => {
@@ -160,24 +178,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   next: () => {
-    const { queue, currentIndex, playMode } = get();
+    const { queue, currentIndex, playMode, setTrack } = get();
     const nextIdx = getNextIndex(queue, currentIndex, playMode);
     if (nextIdx < 0 || nextIdx >= queue.length) return;
 
-    const track = queue[nextIdx];
-    audio.loadTrack(track.path);
-    set({
-      currentIndex: nextIdx,
-      nowPlaying: track,
-      position: 0,
-      duration: track.duration_ms / 1000,
-      playing: true,
-    });
-    audio.play();
+    setTrack(queue, nextIdx, true);
   },
 
   prev: () => {
-    const { queue, currentIndex } = get();
+    const { queue, currentIndex, setTrack } = get();
     // If more than 3 seconds in, restart current track instead
     const currentTime = audio.getCurrentTime();
     if (currentTime > 3) {
@@ -190,16 +199,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const prevIdx = getPrevIndex(queue, currentIndex);
     if (prevIdx < 0 || prevIdx >= queue.length) return;
 
-    const track = queue[prevIdx];
-    audio.loadTrack(track.path);
-    set({
-      currentIndex: prevIdx,
-      nowPlaying: track,
-      position: 0,
-      duration: track.duration_ms / 1000,
-      playing: true,
-    });
-    audio.play();
+    setTrack(queue, prevIdx, true);
   },
 
   seek: (time: number) => {
@@ -228,32 +228,26 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setDuration: (dur: number) => set({ duration: dur }),
 
   playTrack: async (track: Track) => {
-    const { queue } = get();
+    const { queue, setTrack } = get();
     const idx = queue.findIndex((t) => t.path === track.path);
     if (idx === -1) {
       logger.error("player", `Unable to play track, Track '${track.path}' is not in queue`);
       return;
     }
-    set({ currentIndex: idx });
-    audio.loadTrack(track.path);
-    set({
-      nowPlaying: track,
-      position: 0,
-      duration: 0,
-      playing: true,
-    });
-    audio.play();
+    setTrack(queue, idx, true);
   },
 
-  clearQueue: () => {
-    audio.pause();
-    audio.stop();
+  setTrack: (queue, index,  playing) => {
+    const track = queue[index];
     set({
-      queue: [],
-      currentIndex: -1,
-      playing: false,
+      queue,
+      currentIndex: index,
+      nowPlaying: track,
       position: 0,
-      nowPlaying: null,
+      duration: track.duration_ms / 1000,
+      playing,
     });
-  },
+    audio.loadTrack(track.path);
+    if (playing && !audio.isPlaying()) audio.play();
+  }
 }));

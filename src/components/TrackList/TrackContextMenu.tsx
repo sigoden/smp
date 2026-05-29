@@ -5,6 +5,7 @@ import { usePlaylistStore } from "../../stores/playlistStore";
 import { openContainerFolder } from "../../lib/utils";
 import type { Track } from "../../types";
 import { ContextMenuItem, ContextSeparator } from "../ui/context-menu";
+import { usePlayerStore } from "../../stores/playerStore";
 
 export function TrackContextMenu({
   children,
@@ -19,6 +20,7 @@ export function TrackContextMenu({
 }) {
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const removeTracks = usePlaylistStore((s) => s.removeTracks);
+  const removeFromQueue = usePlayerStore((s) => s.removeFromQueue);
 
   const handleOpenInExplorer = () => {
     openContainerFolder(track.path);
@@ -27,6 +29,7 @@ export function TrackContextMenu({
   const handleDeleteFromPlaylist = () => {
     if (activePlaylistName) {
       removeTracks(activePlaylistName, [trackIndex]);
+      removeFromQueue(track.path);
     }
   };
 
@@ -51,7 +54,7 @@ export function TrackContextMenu({
             danger
           >
             <Trash2 className="mr-2 h-3.5 w-3.5" />
-            Delete from Playlist
+            Remove from Playlist
           </ContextMenuItem>
         </ContextMenuPrimitive.Content>
       </ContextMenuPrimitive.Portal>

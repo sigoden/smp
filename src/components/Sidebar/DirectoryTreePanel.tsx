@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, Play, RefreshCw, PlusCircle, ChevronsUp } from "lucide-react";
+import { Music, Search, Plus, X, Loader2, RotateCcw, ChevronRight, ChevronDown, FolderOpen, RefreshCw, PlusCircle, ChevronsUp } from "lucide-react";
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useLibraryStore } from "../../stores/libraryStore";
@@ -124,6 +124,15 @@ function TreeNode({
     }
   };
 
+  const handleAddFileToQueue = async () => {
+    const track = await getTrack(entry.path);
+    appendToQueue([track]);
+    addTracks(activePlaylistName, [track]);
+    if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
+      saveActivePlaylist();
+    }
+  };
+
   const handleReplaceQueue = async () => {
     setGlobalLoading(true);
     const tracks = await loadTracksFromDir(entry.path);
@@ -197,9 +206,9 @@ function TreeNode({
             </ContextMenuItem>
             <ContextSeparator />
             {entry.type === "file" ? (
-              <ContextMenuItem onClick={handlePlayFile}>
-                <Play className="mr-2 h-3.5 w-3.5" />
-                Play
+              <ContextMenuItem onClick={handleAddFileToQueue}>
+                <PlusCircle className="mr-2 h-3.5 w-3.5" />
+                Add to Queue
               </ContextMenuItem>
             ) : (
               <>

@@ -1,10 +1,5 @@
 import { usePlayerStore } from "../../stores/playerStore";
 import { trackTitle, trackArtist, trackAlbum } from "../../lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../ui/tooltip";
 
 export function NowPlayingInfo() {
   const nowPlaying = usePlayerStore((s) => s.nowPlaying);
@@ -22,23 +17,13 @@ export function NowPlayingInfo() {
 
   return (
     <div className="min-w-0 w-full">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <p className="text-sm font-medium truncate text-center cursor-default">
-            {title}
-          </p>
-        </TooltipTrigger>
-        <TooltipContent>{title}</TooltipContent>
-      </Tooltip>
+      <p className="text-sm font-medium truncate text-center cursor-default">
+        {title}
+      </p>
       {subtitle && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <p className="text-xs text-muted-foreground truncate text-center cursor-default">
-              {subtitle}
-            </p>
-          </TooltipTrigger>
-          <TooltipContent>{subtitle}</TooltipContent>
-        </Tooltip>
+        <p className="text-xs text-muted-foreground truncate text-center cursor-default">
+          {subtitle}
+        </p>
       )}
     </div>
   );
