@@ -13,12 +13,13 @@ pub struct RootDirSetting {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
     pub root_dirs: Vec<RootDirSetting>,
+    pub enqueued_paths: Vec<String>,
     pub volume: f64,
     pub play_mode: String,
     pub visible_columns: Vec<String>,
     pub sidebar_tab: String,
-    pub active_playlist_name: Option<String>,
     pub sidebar_width: u16,
+    pub active_playlist_name: Option<String>,
     pub track_index: i32,
 }
 
@@ -26,6 +27,7 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             root_dirs: Vec::new(),
+            enqueued_paths: Vec::new(),
             volume: 0.8,
             play_mode: "sequential".to_string(),
             visible_columns: vec![

@@ -64,12 +64,13 @@ export async function loadSettings(): Promise<AppSettings> {
     logger.warn("utils", "loadSettings failed, using defaults", err);
     return {
       root_dirs: [],
+      enqueued_paths: [],
       volume: 0.8,
       play_mode: "sequential",
       visible_columns: DEFAULT_TRACK_COLUMNS,
       sidebar_tab: "tree",
-      active_playlist_name: QUEUE_PLAYLIST_NAME,
       sidebar_width: 256,
+      active_playlist_name: QUEUE_PLAYLIST_NAME,
       track_index: -1,
     };
   }

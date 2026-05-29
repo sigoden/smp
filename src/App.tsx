@@ -35,15 +35,16 @@ function App() {
     const playlist = usePlaylistStore.getState();
 
     const settings = {
-      sidebar_width: ui.sidebarWidth,
       root_dirs: library.rootDirs.map((r) => ({
         path: r.path,
         expanded_paths: r.expandedPaths,
       })),
+      enqueued_paths: player.enqueuedPaths,
       volume: player.volume,
       play_mode: player.playMode,
       visible_columns: ui.visibleColumns,
       sidebar_tab: ui.sidebarTab,
+      sidebar_width: ui.sidebarWidth,
       active_playlist_name: playlist.activePlaylistName,
       track_index: player.currentIndex,
     };
@@ -116,6 +117,9 @@ function App() {
         await playlistsStore.loadPlaylists();
 
         playlistsStore.setActivePlaylist(settings.active_playlist_name);
+
+        // Restore enqueued paths (setActivePlaylist above may have cleared them)
+        usePlayerStore.setState({ enqueuedPaths: settings.enqueued_paths || [] });
 
         // Fetch tracks for the active playlist and load into queue
         const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(playlistsStore.activePlaylistName);

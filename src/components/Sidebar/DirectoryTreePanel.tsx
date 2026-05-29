@@ -82,6 +82,8 @@ function TreeNode({
   const playTrack = usePlayerStore((s) => s.playTrack);
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
+  const enqueuedPaths = usePlayerStore((s) => s.enqueuedPaths);
+  const recordEnqueuedPaths = usePlayerStore((s) => s.recordEnqueuedPaths);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const addTracks = usePlaylistStore((s) => s.addTracks);
@@ -92,6 +94,8 @@ function TreeNode({
   const isDir = entry.type === "dir";
   const isExpanded = isDir && isEntryExpanded(rootDirs, entry.path);
   const isPlaying = !isDir && queue[currentIndex]?.path === entry.path;
+  const isEnqueuedExact = enqueuedPaths.includes(entry.path);
+  const hasEnqueuedChildren = isDir && enqueuedPaths.some(p => p !== entry.path && (p.startsWith(entry.path + "/") || p.startsWith(entry.path + "\\")));
 
   const handleClick = async () => {
     if (isDir) {
@@ -120,6 +124,7 @@ function TreeNode({
       addTracks(activePlaylistName, [track]);
       if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
         saveActivePlaylist();
+        recordEnqueuedPaths([entry.path]);
       }
     }
   };
@@ -130,6 +135,7 @@ function TreeNode({
     addTracks(activePlaylistName, [track]);
     if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
       saveActivePlaylist();
+      recordEnqueuedPaths([entry.path]);
     }
   };
 
@@ -140,6 +146,7 @@ function TreeNode({
     if (tracks.length > 0) {
       loadQueue(tracks);
       syncQueuePlaylist(tracks);
+      recordEnqueuedPaths([entry.path]);
     }
   };
 
@@ -152,6 +159,7 @@ function TreeNode({
       addTracks(activePlaylistName, tracks);
       if (activePlaylistName === QUEUE_PLAYLIST_NAME) {
         saveActivePlaylist();
+        recordEnqueuedPaths([entry.path]);
       }
     }
   };
@@ -164,7 +172,9 @@ function TreeNode({
             className={cn(
               "flex items-center gap-1.5 px-2 py-0.5 rounded text-sm cursor-pointer hover:bg-accent/50 select-none",
               depth > 0 && "ml-2",
-              isPlaying && "text-accent-foreground bg-accent/30"
+              isEnqueuedExact && "border-l-2 border-primary text-primary/70" ,
+              hasEnqueuedChildren && "border-l-2 border-primary/30",
+              isPlaying && "bg-primary/10 text-primary font-medium"
             )}
             style={{ paddingLeft: `${(depth * 12) - 6}px` }}
             onClick={handleClick}
@@ -173,18 +183,18 @@ function TreeNode({
           >
             {isDir ? (
               loading ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
                 <>
                   {isExpanded ? (
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0" />
                   ) : (
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                   )}
                 </>
               )
             ) : (
-              <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Music className="h-4 w-4 shrink-0" />
             )}
             <span className="whitespace-nowrap">{entry.name}</span>
           </div>

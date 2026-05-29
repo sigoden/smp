@@ -53,6 +53,7 @@ export interface PlaylistData {
 /** Mirrors the Rust AppSettings struct */
 export interface AppSettings {
   root_dirs: { path: string; expanded_paths: string[] }[];
+  enqueued_paths: string[];
   volume: number;
   play_mode: string;
   visible_columns: string[];

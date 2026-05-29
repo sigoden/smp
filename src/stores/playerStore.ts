@@ -15,6 +15,7 @@ interface PlayerState {
   duration: number;
   volume: number;
   playMode: PlayMode;
+  enqueuedPaths: string[];
 
   // Actions
   loadQueue: (tracks: Track[], index?: number) => void;
@@ -34,6 +35,8 @@ interface PlayerState {
   setDuration: (dur: number) => void;
   playTrack: (track: Track) => Promise<void>;
   setTrack: (queue: Track[], index: number,  playing: boolean) => void;
+  recordEnqueuedPaths: (paths: string[]) => void;
+  clearEnqueuedPaths: () => void;
 }
 
 function getNextIndex(
@@ -79,6 +82,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   position: 0,
   duration: 0,
   playMode: "sequential",
+  enqueuedPaths: [],
 
   loadQueue: (tracks, startIndex) => {
     if (tracks.length === 0) return;
@@ -158,6 +162,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       playingTrack: null,
       playing: false,
       position: 0,
+      enqueuedPaths: [],
     });
   },
 
@@ -214,6 +219,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setPlayMode: (mode: PlayMode) => {
     set({ playMode: mode });
+  },
+
+  recordEnqueuedPaths: (paths: string[]) => {
+    const { enqueuedPaths } = get();
+    const newPaths = paths.filter(p => !enqueuedPaths.includes(p));
+    if (newPaths.length === 0) return;
+    set({ enqueuedPaths: [...enqueuedPaths, ...newPaths] });
+  },
+
+  clearEnqueuedPaths: () => {
+    const { enqueuedPaths } = get();
+    if (enqueuedPaths.length === 0) return;
+    set({ enqueuedPaths: [] });
   },
 
   setPosition: (pos: number) => {

@@ -4,6 +4,7 @@ import { logger } from "../lib/logger";
 import { listPlaylists, loadPlaylistTracks, savePlaylist, renamePlaylist, deletePlaylist } from "../lib/utils";
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
 import { useUIStore } from "./uiStore";
+import { usePlayerStore } from "./playerStore";
 
 interface PlaylistState {
   playlists: PlaylistData[];
@@ -226,9 +227,12 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     const { activePlaylistName, playlists } = get();
     if (activePlaylistName === name) return;
     if (!playlists.find((p) => p.name === name)) {
-      console.warn(`Playlist "${name}" not found`);
+      logger.warn('playlist', `Playlist '${name}' not found`);
       return;
     }
     set({ activePlaylistName: name });
+    if (name !== QUEUE_PLAYLIST_NAME) {
+      usePlayerStore.getState().clearEnqueuedPaths();
+    }
   },
 }));
