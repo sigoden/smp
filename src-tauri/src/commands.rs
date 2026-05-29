@@ -115,7 +115,8 @@ pub fn open_playlist(app: AppHandle, name: String) -> Result<(), String> {
         (|| {
             let playlists_dir = crate::playlist::playlists_dir(&app)?;
             let playlist_path = playlists_dir.join(format!("{}.m3u8", name));
-            opener::reveal(&playlist_path).map_err(|e| format!("Failed to open playlist '{name}': {e}"))
+            opener::reveal(&playlist_path)
+                .map_err(|e| format!("Failed to open playlist '{name}': {e}"))
         })(),
         format!("open_playlist({})", name),
     )
