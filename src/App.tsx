@@ -224,7 +224,7 @@ function App() {
               {/* Sidebar tab buttons at bottom */}
               <TabsList className="grid grid-cols-2 mx-2 mb-2 mt-auto flex-shrink-0">
                 <TabsTrigger value="tree" className="text-xs">
-                  Files
+                  Library
                 </TabsTrigger>
                 <TabsTrigger value="playlist" className="text-xs">
                   Playlists
