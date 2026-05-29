@@ -31,6 +31,7 @@ function App() {
           <aside className="relative flex-shrink-0 border-r border-border bg-muted/20 flex flex-col" style={{ width: "var(--sidebar-width, 256px)" }}>
             <Tabs
               value={sidebarTab}
+              tabIndex={-1}
               onValueChange={(v) => setTab(v as "tree" | "playlist")}
               className="flex flex-col h-full"
             >

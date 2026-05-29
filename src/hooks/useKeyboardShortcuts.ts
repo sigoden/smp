@@ -57,11 +57,13 @@ export function useKeyboardShortcuts() {
           if (store.playing) store.pause();
           else store.play();
           break;
-        case "ArrowUp":
+        case "p":
+        case "P":
           e.preventDefault();
           store.prev();
           break;
-        case "ArrowDown":
+        case "n":
+        case "N":
           e.preventDefault();
           store.next();
           break;

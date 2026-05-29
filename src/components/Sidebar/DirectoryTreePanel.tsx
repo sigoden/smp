@@ -339,7 +339,7 @@ export function DirectoryTreePanel() {
       </div>
 
       {/* Tree */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
         {filteredRootDirs.length === 0 ? (
           <p className="text-xs text-muted-foreground italic px-3 py-2">
             {searchQuery ? "No matching files" : rootDirs.length === 0 ? "No directories added" : "No files loaded"}

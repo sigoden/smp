@@ -104,7 +104,9 @@ export function TrackTable() {
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable container with sticky header — header & rows share the same width */}
-      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+      <div 
+        className="flex-1 overflow-y-auto [scrollbar-gutter:stable] focus-visible:ring-2 focus-visible:outline-ring focus-visible:ring-offset-2"
+      >
         {/* Column headers — sticky inside scroll container */}
         <div
           className="sticky top-0 z-10 grid items-center gap-x-3 px-4 py-1.5 text-xs font-medium text-muted-foreground border-b border-border bg-muted"

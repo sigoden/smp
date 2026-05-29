@@ -121,7 +121,7 @@ export function PlaylistPanel() {
       )}
 
       {/* Playlist list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
         {playlists.length === 0 ? (
           <p className="text-xs text-muted-foreground italic px-3 py-2">
             No playlists yet

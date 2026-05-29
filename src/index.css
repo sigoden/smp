@@ -93,4 +93,7 @@
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, sans-serif;
   }
+  input, textarea, select, button {
+    @apply focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring;
+  }
 }
