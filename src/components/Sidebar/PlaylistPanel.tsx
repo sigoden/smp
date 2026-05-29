@@ -140,7 +140,15 @@ export function PlaylistPanel() {
                     )}
                     onClick={() => handleClick(pl.name)}
                   >
-                    <ListMusic className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="relative shrink-0">
+                      <ListMusic className="h-4 w-4 text-muted-foreground" />
+                      {pl.isDirty && (
+                        <span
+                          className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-yellow-400"
+                          title="Unsaved changes"
+                        />
+                      )}
+                    </div>
                     <span className="flex-1 truncate text-sm">{pl.name}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">
                       {pl?.track_count ?? 0}
