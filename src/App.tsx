@@ -118,8 +118,7 @@ function App() {
         playlistsStore.setActivePlaylist(settings.active_playlist_name);
 
         // Fetch tracks for the active playlist and load into queue
-        const activeName = playlistsStore.getActivePlaylist().name;
-        const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(activeName);
+        const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(playlistsStore.activePlaylistName);
         let startIndex: number | undefined;
         if (settings.track_index >= 0 && settings.track_index < resolvedTracks.length) {
           startIndex = settings.track_index;

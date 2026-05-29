@@ -19,6 +19,7 @@ export function createQueuePlaylist(): PlaylistData {
     tracks: [],
     loaded: true,
     track_count: 0,
+    isDirty: false,
   }
 }
 

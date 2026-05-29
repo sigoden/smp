@@ -29,7 +29,6 @@ export function TrackListHeader() {
 
   const playlists = usePlaylistStore((s) => s.playlists);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
-  const isDirty = usePlaylistStore((s) => s.isDirty);
   const saveActivePlaylist = usePlaylistStore((s) => s.saveActivePlaylist);
   const saveQueueAsNewPlaylist = usePlaylistStore(
     (s) => s.saveQueueAsNewPlaylist
@@ -41,6 +40,7 @@ export function TrackListHeader() {
 
   const activePlaylist =
     playlists.find((p) => p.name === activePlaylistName) || createQueuePlaylist();
+  const isDirty = activePlaylist.isDirty ?? false;
 
   const allColumns: TrackColumn[] = ALL_TRACK_COLUMN_KEYS;
   

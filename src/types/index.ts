@@ -47,6 +47,7 @@ export interface PlaylistData {
   tracks: Track[];
   track_count?: number;
   loaded?: boolean;
+  isDirty?: boolean;
 }
 
 /** Mirrors the Rust AppSettings struct */

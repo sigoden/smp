@@ -5,12 +5,9 @@ import { listPlaylists, loadPlaylistTracks, savePlaylist, renamePlaylist, delete
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
 import { useUIStore } from "./uiStore";
 
-const FALLBACK_PLAYLIST: PlaylistData = { name: QUEUE_PLAYLIST_NAME, tracks: [] };
-
 interface PlaylistState {
   playlists: PlaylistData[];
   activePlaylistName: string;
-  isDirty: boolean;
 
   loadPlaylists: () => Promise<void>;
   fetchTracksForPlaylist: (name: string) => Promise<Track[]>;
@@ -24,20 +21,17 @@ interface PlaylistState {
   saveActivePlaylist: () => Promise<void>;
   syncQueuePlaylist: (tracks: Track[]) => Promise<void>;
   setActivePlaylist: (name: string) => void;
-  getActivePlaylist: () => PlaylistData;
 }
 
 export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   playlists: [],
   activePlaylistName: QUEUE_PLAYLIST_NAME,
-  isDirty: false,
 
   loadPlaylists: async () => {
     try {
       const playlists: PlaylistData[] = await listPlaylists();
       set({
-        playlists: playlists.map((p) => ({ ...p, tracks: [], loaded: false })),
-        isDirty: false,
+        playlists: playlists.map((p) => ({ ...p, tracks: [], loaded: false, isDirty: false })),
       });
     } catch (err) {
       logger.error("playlist", "loadPlaylists failed", err);
@@ -73,7 +67,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
         return;
       }
       await savePlaylist({ name, tracks: [] });
-      const newPlaylist: PlaylistData = { name, tracks: [] };
+      const newPlaylist: PlaylistData = { name, tracks: [], isDirty: false };
       set((state) => ({
         playlists: [...state.playlists, newPlaylist],
         activePlaylistName: name,
@@ -123,7 +117,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
   },
 
   addTracks: (playlistName: string, tracks: Track[]) => {
-    const { playlists, activePlaylistName } = get();
+    const { playlists } = get();
     const playlist = playlists.find((p) => p.name === playlistName);
     if (!playlist || !playlist.loaded) return;
 
@@ -131,58 +125,67 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     const toAddTracks = tracks.filter(
       v => oldTracks.every(t => t.path !== v.path)
     );
+    if (toAddTracks.length === 0) return;
     const newTracks = [...oldTracks, ...toAddTracks];
 
     const updated = {
       ...playlist,
       tracks: newTracks,
       track_count: newTracks.length,
+      isDirty: true,
     };
-
     set({
       playlists: playlists.map((p) =>
         p.name === playlistName ? updated : p
       ),
-      isDirty: activePlaylistName === playlistName,
     });
   },
 
   removeTracks: (playlistName: string, trackIndices: number[]) => {
-    const { playlists, activePlaylistName } = get();
+    const { playlists } = get();
     const playlist = playlists.find((p) => p.name === playlistName);
     if (!playlist || !playlist.loaded) return;
 
-    const newTracks = [...playlist.tracks].filter(
+    const newTracks = playlist.tracks.filter(
       (_, i) => !trackIndices.includes(i)
     );
+    if (newTracks.length === playlist.tracks.length) return;
 
     const updated = {
       ...playlist,
       tracks: newTracks,
-      track_count: newTracks.length
+      track_count: newTracks.length,
+      isDirty: true,
     };
 
     set({
       playlists: playlists.map((p) =>
         p.name === playlistName ? updated : p
       ),
-      isDirty: activePlaylistName === playlistName,
     });
   },
 
   savePlaylist: async (playlist: PlaylistData) => {
-    playlist = { ...playlist, track_count: playlist.tracks.length, loaded: true };
+    const updated = {
+      ...playlist,
+      track_count: playlist.tracks.length,
+      loaded: true,
+      isDirty: false
+    };
     try {
-      await savePlaylist(playlist);
+      await savePlaylist(updated);
       set((state) => {
-        const updates: Partial<PlaylistState> = {};
-        if (state.activePlaylistName === playlist.name) {
-          updates.isDirty = false;
+        const idx = state.playlists.findIndex((p) => p.name === playlist.name);
+        if (idx === -1) {
+          return {
+            playlists: [...state.playlists, updated],
+          }
+        } 
+        return {
+          playlists: state.playlists.map((p) =>
+            p.name === playlist.name ? updated : p
+          ),
         }
-        if (!state.playlists.find((p) => p.name === playlist.name)) {
-          updates.playlists = [...state.playlists, playlist];
-        }
-        return updates;
       });
     } catch (err) {
       logger.error("playlist", "savePlaylist failed", err);
@@ -213,6 +216,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     const playlist: PlaylistData = {
       name: QUEUE_PLAYLIST_NAME,
       tracks,
+      isDirty: false,
     };
     await savePlaylist(playlist);
     setActivePlaylist(playlist.name);
@@ -225,11 +229,6 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
       console.warn(`Playlist "${name}" not found`);
       return;
     }
-    set({ activePlaylistName: name, isDirty: false });
-  },
-
-  getActivePlaylist: () => {
-    const { playlists, activePlaylistName } = get();
-    return playlists.find((p) => p.name === activePlaylistName) || FALLBACK_PLAYLIST;
+    set({ activePlaylistName: name });
   },
 }));

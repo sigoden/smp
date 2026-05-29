@@ -82,9 +82,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   loadQueue: (tracks, startIndex) => {
     if (tracks.length === 0) return;
-    audio.pause();
-    audio.stop();
-    const { playMode, setTrack } = get();
+    const { playMode, setTrack, playing, clearQueue } = get();
+    clearQueue();
     let currentIndex = 0;
     if (startIndex !== undefined) {
       if (startIndex >= 0 && startIndex < tracks.length) {
@@ -93,7 +92,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     } else if (playMode === "shuffle") {
       currentIndex = Math.floor(Math.random() * tracks.length);
     }
-    setTrack(tracks, currentIndex, false);
+    setTrack(tracks, currentIndex, playing);
   },
 
   appendToQueue: (tracks: Track[]) => {
