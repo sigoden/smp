@@ -170,7 +170,7 @@ export function mapMetadataToTrack(
       artist: null,
       album: null,
       duration_ms: null,
-      track_number: null,
+      track: null,
       genre: null,
       album_artist: null,
       year: null,

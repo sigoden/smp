@@ -6,12 +6,11 @@ use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TrackMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album: Option<String>,
     pub duration_ms: Option<u32>,
-    pub track_number: Option<String>,
+    pub track: Option<String>,
     pub genre: Option<String>,
     pub album_artist: Option<String>,
     pub year: Option<usize>,
@@ -44,7 +43,7 @@ pub fn read_metadata(file_path: &str) -> Result<TrackMetadata, String> {
         title: t.title().map(|s| s.to_string()),
         artist: t.artist().map(|s| s.to_string()),
         album: t.album().map(|s| s.to_string()),
-        track_number: t.track().map(|n| n.to_string()),
+        track: t.track().map(|n| n.to_string()),
         genre: t.genre().map(|s| s.to_string()),
         album_artist: t.get_string(ItemKey::AlbumArtist).map(|s| s.to_string()),
         year: t.date().map(|ts| ts.year as usize),

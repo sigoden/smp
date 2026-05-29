@@ -18,7 +18,7 @@ export interface TrackMetadata {
   artist: string | null;
   album: string | null;
   duration_ms: number | null;
-  track_number: string | null;
+  track: string | null;
   genre: string | null;
   album_artist: string | null;
   year: number | null;

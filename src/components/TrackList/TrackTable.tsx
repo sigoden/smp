@@ -46,7 +46,7 @@ function TrackRow({
     artist: trackArtist(track),
     album: trackAlbum(track),
     duration: formatTrackDuration(trackDuration(track)),
-    track_number: track.metadata.track_number ?? "",
+    track: track.metadata.track ?? "",
     genre: track.metadata.genre ?? "",
     album_artist: track.metadata.album_artist ?? "",
     year: track.metadata.year?.toString() ?? "",
