@@ -1,4 +1,4 @@
-import { NowPlayingInfo } from "./NowPlayingInfo";
+import { PlayingTrackInfo } from "./PlayingTrackInfo";
 import { PlaybackControls } from "./PlaybackControls";
 import { ProgressBar } from "./ProgressBar";
 import { VolumeSlider } from "./VolumeSlider";
@@ -20,7 +20,7 @@ export function PlayerBar() {
       {/* Center: now playing info + progress + time */}
       <div className="flex flex-col items-center flex-1 min-w-0 gap-0.5">
         {/* Row 1: song info */}
-        <NowPlayingInfo />
+        <PlayingTrackInfo />
 
         {/* Row 2: progress slider */}
         <ProgressBar />

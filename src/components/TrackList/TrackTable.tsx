@@ -95,7 +95,7 @@ export function TrackTable() {
   const orderedColumns = ALL_TRACK_COLUMN_KEYS.filter((c) => visibleColumns.includes(c));
   const tracks = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
-  const nowPlaying = usePlayerStore((s) => s.nowPlaying);
+  const playingTrack = usePlayerStore((s) => s.playingTrack);
   const playlists = usePlaylistStore((s) => s.playlists);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
 
@@ -140,7 +140,7 @@ export function TrackTable() {
               track={track}
               index={index}
               isPlaying={
-                track.path === nowPlaying?.path && currentIndex === index
+                track.path === playingTrack?.path && currentIndex === index
               }
               columns={orderedColumns}
             />

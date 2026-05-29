@@ -1,10 +1,10 @@
 import { usePlayerStore } from "../../stores/playerStore";
 import { trackTitle, trackArtist, trackAlbum } from "../../lib/utils";
 
-export function NowPlayingInfo() {
-  const nowPlaying = usePlayerStore((s) => s.nowPlaying);
+export function PlayingTrackInfo() {
+  const playingTrack = usePlayerStore((s) => s.playingTrack);
 
-  if (!nowPlaying) {
+  if (!playingTrack) {
     return (
       <div className="min-w-0 w-full max-w-xl">
         <p className="text-sm text-muted-foreground truncate text-center">No track playing</p>
@@ -12,8 +12,8 @@ export function NowPlayingInfo() {
     );
   }
 
-  const title = trackTitle(nowPlaying);
-  const subtitle = [trackArtist(nowPlaying), trackAlbum(nowPlaying)].filter(Boolean).join(" — ");
+  const title = trackTitle(playingTrack);
+  const subtitle = [trackArtist(playingTrack), trackAlbum(playingTrack)].filter(Boolean).join(" — ");
 
   return (
     <div className="min-w-0 w-full">

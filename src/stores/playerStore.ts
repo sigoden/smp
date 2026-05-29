@@ -9,12 +9,12 @@ let _seekGuard = false;
 interface PlayerState {
   queue: Track[];
   currentIndex: number;
+  playingTrack: Track | null;
   playing: boolean;
   position: number;
   duration: number;
   volume: number;
   playMode: PlayMode;
-  nowPlaying: Track | null;
 
   // Actions
   loadQueue: (tracks: Track[], index?: number) => void;
@@ -73,7 +73,7 @@ function getPrevIndex(
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
   currentIndex: -1,
-  nowPlaying: null,
+  playingTrack: null,
   playing: false,
   volume: 0.8,
   position: 0,
@@ -156,9 +156,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({
       queue: [],
       currentIndex: -1,
+      playingTrack: null,
       playing: false,
       position: 0,
-      nowPlaying: null,
     });
   },
 
@@ -242,7 +242,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({
       queue,
       currentIndex: index,
-      nowPlaying: track,
+      playingTrack: track,
       position: 0,
       duration: track.duration_ms / 1000,
       playing,

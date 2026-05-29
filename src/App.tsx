@@ -182,16 +182,16 @@ function App() {
     };
   }, [scheduleSave]);
 
-  // Update tray tooltip when nowPlaying changes
-  const nowPlaying = usePlayerStore((s) => s.nowPlaying);
+  // Update tray tooltip when playingTrack changes
+  const playingTrack = usePlayerStore((s) => s.playingTrack);
   useEffect(() => {
-    if (nowPlaying) {
-      const text = `${trackTitle(nowPlaying)} — ${trackArtist(nowPlaying)}`;
+    if (playingTrack) {
+      const text = `${trackTitle(playingTrack)} — ${trackArtist(playingTrack)}`;
       emit("update-tray-tooltip", text);
     } else {
       emit("update-tray-tooltip", "Music Player");
     }
-  }, [nowPlaying]);
+  }, [playingTrack]);
 
   // Update tray play/pause label when playing state changes
   const playing = usePlayerStore((s) => s.playing);
