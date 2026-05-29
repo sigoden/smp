@@ -1,8 +1,8 @@
 use crate::logger::log_cmd_err;
 use crate::metadata::TrackMetadata;
+use crate::persisted_state::PersistedState;
 use crate::playlist::{Playlist, TrackEntry};
 use crate::scanner::FsEntry;
-use crate::persisted_state::PersistedState;
 
 use rayon::prelude::*;
 use tauri::command;

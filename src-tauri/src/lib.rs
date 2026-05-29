@@ -1,9 +1,9 @@
 mod commands;
 mod logger;
 mod metadata;
+mod persisted_state;
 mod playlist;
 mod scanner;
-mod persisted_state;
 
 use tauri::{
     image::Image,
