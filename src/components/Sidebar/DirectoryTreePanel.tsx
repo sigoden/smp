@@ -82,8 +82,8 @@ function TreeNode({
   const playTrack = usePlayerStore((s) => s.playTrack);
   const queue = usePlayerStore((s) => s.queue);
   const currentIndex = usePlayerStore((s) => s.currentIndex);
-  const enqueuedPaths = usePlayerStore((s) => s.enqueuedPaths);
-  const recordEnqueuedPaths = usePlayerStore((s) => s.recordEnqueuedPaths);
+  const enqueuedPaths = useLibraryStore((s) => s.enqueuedPaths);
+  const recordEnqueuedPaths = useLibraryStore((s) => s.recordEnqueuedPaths);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const addTracks = usePlaylistStore((s) => s.addTracks);

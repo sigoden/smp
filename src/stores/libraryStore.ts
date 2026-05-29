@@ -5,11 +5,14 @@ import { scanDirectory } from "../lib/utils";
 
 interface LibraryState {
   rootDirs: RootDir[];
+  enqueuedPaths: string[];
   searchQuery: string;
 
   // Actions
   addRootDir: (path: string) => Promise<void>;
   removeRootDir: (path: string) => void;
+  recordEnqueuedPaths: (paths: string[]) => void;
+  clearEnqueuedPaths: () => void;
   setSearch: (query: string) => void;
   toggleExpand: (path: string) => void;
   collapseAll: () => void;
@@ -20,6 +23,7 @@ interface LibraryState {
 export const useLibraryStore = create<LibraryState>((set, get) => ({
   rootDirs: [],
   searchQuery: "",
+  enqueuedPaths: [],
 
   addRootDir: async (path: string) => {
     const { rootDirs } = get();
@@ -38,6 +42,19 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   setSearch: (query: string) => {
     set({ searchQuery: query });
+  },
+
+  recordEnqueuedPaths: (paths: string[]) => {
+    const { enqueuedPaths } = get();
+    const newPaths = paths.filter(p => !enqueuedPaths.includes(p));
+    if (newPaths.length === 0) return;
+    set({ enqueuedPaths: [...enqueuedPaths, ...newPaths] });
+  },
+
+  clearEnqueuedPaths: () => {
+    const { enqueuedPaths } = get();
+    if (enqueuedPaths.length === 0) return;
+    set({ enqueuedPaths: [] });
   },
 
   collapseAll: () => {

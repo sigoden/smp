@@ -4,7 +4,7 @@ import { logger } from "../lib/logger";
 import { listPlaylists, loadPlaylistTracks, savePlaylist, renamePlaylist, deletePlaylist } from "../lib/utils";
 import { QUEUE_PLAYLIST_NAME } from "../lib/constants";
 import { useUIStore } from "./uiStore";
-import { usePlayerStore } from "./playerStore";
+import { useLibraryStore } from "./libraryStore";
 
 interface PlaylistState {
   playlists: PlaylistData[];
@@ -232,7 +232,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => ({
     }
     set({ activePlaylistName: name });
     if (name !== QUEUE_PLAYLIST_NAME) {
-      usePlayerStore.getState().clearEnqueuedPaths();
+      useLibraryStore.getState().clearEnqueuedPaths();
     }
   },
 }));

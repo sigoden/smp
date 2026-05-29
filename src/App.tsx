@@ -39,7 +39,7 @@ function App() {
         path: r.path,
         expanded_paths: r.expandedPaths,
       })),
-      enqueued_paths: player.enqueuedPaths,
+      enqueued_paths: library.enqueuedPaths,
       volume: player.volume,
       play_mode: player.playMode,
       visible_columns: ui.visibleColumns,
@@ -97,6 +97,7 @@ function App() {
               tree: [],
               expandedPaths: r.expanded_paths,
             })),
+             enqueuedPaths: persistedState.enqueued_paths || [] ,
           });
           // Scan each root dir to populate trees
           await useLibraryStore.getState().refreshAll();
@@ -117,9 +118,6 @@ function App() {
         await playlistsStore.loadPlaylists();
 
         playlistsStore.setActivePlaylist(persistedState.active_playlist_name);
-
-        // Restore enqueued paths (setActivePlaylist above may have cleared them)
-        usePlayerStore.setState({ enqueuedPaths: persistedState.enqueued_paths || [] });
 
         // Fetch tracks for the active playlist and load into queue
         const resolvedTracks = await playlistsStore.fetchTracksForPlaylist(playlistsStore.activePlaylistName);

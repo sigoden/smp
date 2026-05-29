@@ -22,6 +22,7 @@ import {
 import { Button } from "../ui/button";
 import type { TrackColumn } from "../../types";
 import { ALL_TRACK_COLUMNS, QUEUE_PLAYLIST_NAME, ALL_TRACK_COLUMN_KEYS } from "../../lib/constants";
+import { useLibraryStore } from "../../stores/libraryStore";
 import { createQueuePlaylist } from "../../lib/utils";
 
 export function TrackListHeader() {
@@ -37,6 +38,7 @@ export function TrackListHeader() {
   const toggleColumn = useUIStore((s) => s.toggleColumn);
   const queue = usePlayerStore((s) => s.queue);
   const clearQueue = usePlayerStore((s) => s.clearQueue);
+  const clearEnqueuedPaths = useLibraryStore((s) => s.clearEnqueuedPaths);
 
   const activePlaylist =
     playlists.find((p) => p.name === activePlaylistName) || createQueuePlaylist();
@@ -46,6 +48,13 @@ export function TrackListHeader() {
   
   const handleSaveAsNewPlaylist = async (name: string) => {
     await saveQueueAsNewPlaylist(name, queue);
+  };
+
+  const handleClearPlaylist = () => {
+    clearQueue();
+    if (activePlaylist.name === QUEUE_PLAYLIST_NAME) {
+      clearEnqueuedPaths();
+    }
   };
 
   const saveValidator = (name: string) =>
@@ -115,7 +124,7 @@ export function TrackListHeader() {
                   <Button variant="outline">Cancel</Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <Button variant="destructive" onClick={clearQueue}>
+                  <Button variant="destructive" onClick={handleClearPlaylist}>
                     Clear
                   </Button>
                 </DialogClose>
