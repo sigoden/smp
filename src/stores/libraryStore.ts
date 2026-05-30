@@ -12,6 +12,7 @@ interface LibraryState {
   addRootDir: (path: string) => Promise<void>;
   removeRootDir: (path: string) => void;
   recordEnqueuedPaths: (paths: string[]) => void;
+  replaceEnqueuedPaths: (paths: string[]) => void;
   clearEnqueuedPaths: () => void;
   setSearch: (query: string) => void;
   toggleExpand: (path: string) => void;
@@ -49,6 +50,10 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     const newPaths = paths.filter(p => !enqueuedPaths.includes(p));
     if (newPaths.length === 0) return;
     set({ enqueuedPaths: [...enqueuedPaths, ...newPaths] });
+  },
+
+  replaceEnqueuedPaths: (paths: string[]) => {
+    set({ enqueuedPaths: paths });
   },
 
   clearEnqueuedPaths: () => {

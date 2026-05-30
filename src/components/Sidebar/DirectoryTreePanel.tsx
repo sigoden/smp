@@ -84,6 +84,7 @@ function TreeNode({
   const currentIndex = usePlayerStore((s) => s.currentIndex);
   const enqueuedPaths = useLibraryStore((s) => s.enqueuedPaths);
   const recordEnqueuedPaths = useLibraryStore((s) => s.recordEnqueuedPaths);
+  const replaceEnqueuedPaths = useLibraryStore((s) => s.replaceEnqueuedPaths);
   const refreshDir = useLibraryStore((s) => s.refreshDir);
   const activePlaylistName = usePlaylistStore((s) => s.activePlaylistName);
   const addTracks = usePlaylistStore((s) => s.addTracks);
@@ -146,7 +147,7 @@ function TreeNode({
     if (tracks.length > 0) {
       loadQueue(tracks);
       syncQueuePlaylist(tracks);
-      recordEnqueuedPaths([entry.path]);
+      replaceEnqueuedPaths([entry.path]);
     }
   };
 
