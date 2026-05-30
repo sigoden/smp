@@ -16,33 +16,13 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check-tag:
-    runs-on: ubuntu-latest
-    outputs:
-      rc: ${{ steps.check.outputs.rc }}
-    steps:
-      - name: Check Tag
-        id: check
-        run: |
-          ver=${GITHUB_REF##*/}
-          if [[ "$ver" =~ [0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "rc=false" >> "$GITHUB_OUTPUT"
-            echo "version=$ver" >> "$GITHUB_OUTPUT"
-          else
-            echo "rc=true" >> "$GITHUB_OUTPUT"
-            echo "version=$ver" >> "$GITHUB_OUTPUT"
-          fi
-
   build:
-    needs: check-tag
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: macos-latest
-            args: --target aarch64-apple-darwin
-          - platform: macos-latest
-            args: --target x86_64-apple-darwin
+            args: ''
           - platform: ubuntu-latest
             args: ''
           - platform: windows-latest
@@ -60,8 +40,6 @@ jobs:
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ startsWith(matrix.platform, 'macos') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - uses: Swatinem/rust-cache@v2
 
@@ -85,14 +63,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "SimpleMusicPlayer ${{ github.ref_name }}"
-          releaseBody: |
-            ## SimpleMusicPlayer ${{ github.ref_name }}
-
-            ### Installation
-            Download the appropriate installer for your platform from the assets below.
-
-            > For the full changelog, see the commits since the previous release.
           releaseDraft: false
-          prerelease: ${{ needs.check-tag.outputs.rc == 'true' }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
           args: ${{ matrix.args }}
