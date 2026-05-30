@@ -17,60 +17,28 @@
   </p>
 </div>
 
-## Overview
-
-SimpleMusicPlayer gives you a clean, lightweight interface for your local music library. Point it at your music folders, browse by directory tree, build playlists automatically, and play — no internet required.
+<img width="2400" height="1656" alt="Screenshot" src="https://github.com/user-attachments/assets/451ce432-881a-47dc-8475-ddaa86d0a7cc" />
 
 ---
 
 ## Features
 
-<details open>
-<summary><b>🎵 Playback</b></summary>
+- **🎵 Playback** — Sequential, Repeat One & Shuffle modes; system tray controls; persistent volume
+- **📂 Library** — Directory tree browser; multi-root scanning; real-time search; in-app tag editing
+- **📋 Playlists** — M3U8 format; create / rename / delete; lazy-loaded tracks; save queue as playlist
+- **🎧 Queue** — Append or replace without interrupting playback; shuffle never repeats same track twice
+- **⚡ Performance** — Parallel metadata reads (rayon); resizable sidebar; configurable columns; state persistence
+- **🖥️ Cross-platform** — Built with Tauri 2, runs on Windows, macOS, and Linux
 
-- Play single tracks, folders, or entire playlists
-- **Sequential**, **Repeat One**, and **Shuffle** play modes (shuffle guarantees no consecutive repeats)
-- Persistent volume and play mode across sessions
-- System tray integration — minimize to tray, control playback from tray menu, surface with a click
-- Global tray menu controls: Play/Pause, Next, Previous
+## Installation
 
-</details>
+Download the latest installer for your platform from [Releases](https://github.com/sigoden/smp/releases) — no compilation needed.
 
-<details open>
-<summary><b>📂 Library Management</b></summary>
+## Build from Source
 
-- **Directory tree browser** — navigate your music folders as they appear on disk
-- Add multiple root folders; each is scanned recursively for audio files
-- Search within your library with real-time filtering
-- Track metadata display: title, artist, album, duration, file name
-- Edit tags (title/artist/album) directly from the UI
-
-</details>
-
-<details open>
-<summary><b>📋 Playlists</b></summary>
-
-- Create, rename, and delete playlists
-- Add tracks to playlists from any context (tree, table, queue)
-- **M3U8 format** — portable and compatible with other players
-- Lazy-loaded tracks — playlist metadata loads instantly, track data loads on demand
-- Queue system — replace or append tracks without interrupting playback
-- Save any queue as a new playlist
-
-</details>
-
-<details open>
-<summary><b>⚡ Performance & UX</b></summary>
-
-- Fast async directory scanning with parallel metadata reads (via Rust's `rayon`)
-- Loading indicators for long-running operations
-- Configurable columns in the track table
-- Resizable sidebar
-- State persistence — window layout, volume, play mode, active playlist all restored on restart
-
-</details>
-
-## Development
+1. Set up the [Tauri 2 prerequisites](https://tauri.app/start/prerequisites/) for your platform
+2. Run `npm install` (Node.js 22+ required)
+3. Build with `npm run tauri:build`
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup and contributing guidelines.
 

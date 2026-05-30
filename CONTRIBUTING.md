@@ -1,10 +1,57 @@
 # Contributing to smp
 
-## Build locally
+## Prerequisites & Setup
 
-1. Set up the [Tauri](https://tauri.app/) framework and it's [prerequisites](https://tauri.app/start/prerequisites/) depending on your platform
-2. Run `npm install` (using Node version 22+)
-3. You can then create a development build using `npm run tauri:build`.
+| Tool | Version | Notes |
+|------|---------|-------|
+| [Rust](https://rustup.rs/) | 1.77.2+ | `rustup toolchain install` |
+| [Node.js](https://nodejs.org/) | 22+ | |
+| npm | (bundled with Node.js) | |
+
+Platform-specific system dependencies (GTK, WebKit, etc.) — see the [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/).
+
+After meeting the prerequisites, run:
+
+```bash
+npm install
+```
+
+## Development Workflow
+
+```bash
+# Start dev server with hot reload (frontend + Rust)
+npm run tauri:dev
+
+# TypeScript type check only (no emit)
+npx tsc -b --noEmit
+
+# Lint frontend code
+npm run lint
+
+# Production build
+npm run tauri:build
+```
+
+The dev server runs at `http://localhost:1420`.
+
+## Code Style & Linting
+
+**TypeScript / React** — ESLint with `typescript-eslint`, `react-hooks`, and `react-refresh` plugins. Run `npm run lint` before committing.
+
+**Rust** — Follow `cargo fmt` style and `cargo clippy` suggestions. The project uses Rust edition 2021 with MSRV 1.77.2.
+
+## Git & PR Guidelines
+
+**Commit messages** — Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add drag-and-drop playlist reordering
+fix: prevent crash when scanning empty directory
+refactor: extract scan logic into separate module
+docs: update README with installation instructions
+```
+
+**Pull requests** — Keep changes focused. A PR should address one concern. Link to related issues when applicable. All PRs are reviewed before merge.
 
 ## Tech Stack
 
@@ -67,7 +114,7 @@ smp/
 - **Error handling**: Rust commands return `Result<T, String>`. Frontend catches and logs errors.
 - **No network**: No fetch/XHR at runtime. All data comes from local filesystem via Tauri IPC.
 - **Playlist format**: M3U8 playlists stored in app data directory. Queue is a special playlist named `PLAYING`.
-- **TypeScript**: Strict mode.
+- **TypeScript**: Strict mode. The TypeScript config uses strict mode with `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax`.
 
 ## License
 
